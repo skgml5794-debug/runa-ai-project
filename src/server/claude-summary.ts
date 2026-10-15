@@ -103,28 +103,32 @@ export async function summarizeWithClaude(
     api = new Anthropic() as unknown as MessagesClient;
   }
 
+  const userContent = `출처: ${post.source}\n<post>\n${post.title}\n${post.text}\n</post>${post.pinnedComment ? `\n<pinned_comment>\n${post.pinnedComment}\n</pinned_comment>` : ""
+    }`;
+  // 진단용: 모델 입력의 앞부분만 남긴다.
+  console.info("[keepnote] claude-input", { input: userContent.slice(0, 100) });
+
   let response;
   try {
     response = await api.messages.parse({
       model: process.env.ANTHROPIC_MODEL || DEFAULT_MODEL,
       max_tokens: MAX_OUTPUT_TOKENS,
       system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `출처: ${post.source}\n<post>\n${post.title}\n${post.text}\n</post>${
-            post.pinnedComment
-              ? `\n<pinned_comment>\n${post.pinnedComment}\n</pinned_comment>`
-              : ""
-          }`,
-        },
-      ],
+      messages: [{ role: "user", content: userContent }],
       output_config: { format: jsonSchemaOutputFormat(OUTPUT_SCHEMA) },
     });
-  } catch {
+  } catch (error) {
+    // 진단용: 상태 코드와 오류 유형만 남긴다. (메시지·헤더는 남기지 않음)
+    const detail = error as { status?: unknown; name?: unknown; error?: { error?: { type?: unknown } } };
+    console.error("[keepnote] claude-error", {
+      status: typeof detail.status === "number" ? detail.status : null,
+      name: typeof detail.name === "string" ? detail.name : "unknown",
+      type: typeof detail.error?.error?.type === "string" ? detail.error.error.type : null,
+    });
     throw new AiFailedError();
   }
 
+  console.info("[keepnote] claude-response", { ok: true, stopReason: response.stop_reason });
   if (response.stop_reason === "refusal" || response.stop_reason === "max_tokens") {
     throw new AiFailedError();
   }

@@ -135,7 +135,7 @@ async function readLimited(response: Response, limit: number): Promise<string> {
   const decoder = new TextDecoder();
   let received = 0;
   let text = "";
-  for (;;) {
+  for (; ;) {
     const { done, value } = await reader.read();
     if (done) break;
     received += value.byteLength;
@@ -211,7 +211,15 @@ export async function fetchPostMeta(
     } catch {
       throw new FetchFailedError("게시물 응답을 읽지 못했습니다.");
     }
-    return buildPostMeta({ url: target.url, source: target.source }, html);
+    const post = buildPostMeta({ url: target.url, source: target.source }, html);
+    // 진단용: 추출 결과의 앞부분만 남긴다. (키·헤더·쿠키는 다루지 않음)
+    console.info("[keepnote] post-meta", {
+      source: post.source,
+      title: post.title.slice(0, 100),
+      text: post.text.slice(0, 100),
+      pinnedComment: post.pinnedComment.slice(0, 100),
+    });
+    return post;
   }
   throw new FetchFailedError("이동이 너무 많습니다.");
 }
