@@ -86,6 +86,14 @@ export class LocalStorageRepository implements KeepnoteRepository {
     );
   }
 
+  async reorderCategories(ids: string[]): Promise<void> {
+    const current = read<Category>(CATEGORIES_KEY);
+    const byId = new Map(current.map((category) => [category.id, category]));
+    const ordered = ids.flatMap((id) => byId.get(id) ?? []);
+    const rest = current.filter((category) => !ids.includes(category.id));
+    write(CATEGORIES_KEY, [...ordered, ...rest]);
+  }
+
   async deleteCategory(id: string): Promise<void> {
     write(
       CATEGORIES_KEY,

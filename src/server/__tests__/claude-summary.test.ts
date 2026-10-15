@@ -22,7 +22,7 @@ const GOOD = {
   summary: " 얼음이 하루 종일 유지되는 텀블러 후기.\n세척은 베이킹소다가 좋다. ",
   products: ["Stanley 퀜처 H2.0"],
   places: [],
-  tip: "베이킹소다로 세척하면 냄새가 덜 남는다",
+  tips: ["베이킹소다로 세척", "뚜껑 분리 후 건조"],
 };
 
 function fakeClient(output: unknown, stop = "end_turn") {
@@ -33,12 +33,12 @@ function fakeClient(output: unknown, stop = "end_turn") {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("validateOutput", () => {
-  it("핵심 요약은 한 문단, 방법과 노하우는 Tip 하나로 정리한다", () => {
+  it("핵심 요약은 한 문단, 방법과 노하우는 Tip 항목별 불릿으로 정리한다", () => {
     const result = validateOutput(GOOD, SOURCE);
     expect(result.summaryLines).toEqual(["얼음이 하루 종일 유지되는 텀블러 후기. 세척은 베이킹소다가 좋다."]);
     expect(result.keyInfo).toEqual([
       { label: "제품", items: ["Stanley 퀜처 H2.0"] },
-      { label: "Tip", items: ["베이킹소다로 세척하면 냄새가 덜 남는다"] },
+      { label: "Tip", items: ["베이킹소다로 세척", "뚜껑 분리 후 건조"] },
     ]);
   });
 
@@ -56,7 +56,7 @@ describe("validateOutput", () => {
   });
 
   it("확인된 정보가 없는 유형은 만들지 않는다", () => {
-    const result = validateOutput({ ...GOOD, products: [], tip: "  " }, SOURCE);
+    const result = validateOutput({ ...GOOD, products: [], tips: ["  ", ""] }, SOURCE);
     expect(result.keyInfo).toEqual([]);
   });
 
@@ -82,6 +82,9 @@ describe("summarizeWithClaude", () => {
     expect(params.system).toContain("~했다고 합니다");
     expect(params.system).toContain("명사형·단문형");
     expect(params.system).toContain("~선택하면 됩니다");
+    // Tip은 항목별 배열, 요약과 중복 금지
+    expect(params.system).toContain("항목별로 나눈 배열");
+    expect(params.system).toContain("summary에 다시 쓰지 마세요");
   });
 
   it("고정 댓글을 본문과 함께 전달하고, 고정 댓글에 있는 제품명도 원문 표기 그대로 남긴다", async () => {

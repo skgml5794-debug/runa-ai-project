@@ -2,10 +2,10 @@
 
 /* DESIGN.md의 Keepnote 적용 가이드 토큰 */
 @theme {
-  --color-voltage-violet: #862fe7;
-  --color-ultra-violet: #5f259e;
-  --color-lavender-mist: #ad6df4;
-  --color-orchid-wash: #bd8ff0;
+  --color-voltage-violet: #374151;
+  --color-ultra-violet: #1f2937;
+  --color-lavender-mist: #9aa7b8;
+  --color-orchid-wash: #b8c2d0;
   --color-midnight-ink: #111827;
   --color-graphite: #3f4654;
   --color-slate: #6b7589;
@@ -13,17 +13,17 @@
   --color-fog: #f1f5f9;
   --color-fog-soft: #f8f9fb;
   --color-placeholder: #98a1b1;
-  --color-fog-hover: #eff1f5;
+  --color-fog-hover: #e6eaf0;
   --color-mist: #d8e0ea;
   --color-mint-wash: #d6fcf4;
-  --color-lavender-field: #ebdafd;
+  --color-lavender-field: #e5e9ef;
   --color-danger: #dc2626;
   --color-danger-wash: #fef2f2;
 
-  --font-sans: "Inter Variable", "Pretendard Variable", Pretendard,
-    ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Bricolage Grotesque Variable", "Pretendard Variable",
-    Pretendard, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "Pretendard Variable", Pretendard, ui-sans-serif, system-ui,
+    -apple-system, sans-serif;
+  --font-display: "Pretendard Variable", Pretendard, ui-sans-serif, system-ui,
+    -apple-system, sans-serif;
 
   --animate-toast-in: toast-in 200ms ease-out;
   --animate-dialog-in: dialog-in 160ms ease-out;

@@ -6,7 +6,8 @@ export const SUMMARY_TIMEOUT_MS = 30_000;
 export const TOAST_DURATION_MS = 2_500;
 
 export const MESSAGES = {
-  homeHeadline: "어떤 정보를 킵할까요?",
+  homeHeadline: "핵심만 쏙,\n킵노트에 저장해요",
+  homeSubtitle: "링크를 붙여넣으면 주요 내용만 요약해 보관할 수 있어요",
   loading: "AI 분석중..",
   summaryDone: "요약이 성공적으로 완료되었어요",
   emptyInput: "내용을 입력해주세요",
@@ -21,11 +22,11 @@ export const MESSAGES = {
   emptyCategories: "만든 킵박스가 없어요.",
   categoryNamePlaceholder: "킵박스명을 입력해주세요",
   categoryDuplicate: "이미 사용 중인 킵박스명이에요.",
+  summaryEditHint: "없애고 싶은 정보는 지우면 돼요",
   categoryTotalMax: "킵박스는 최대 20개까지 가능해요",
   categoryNoteMax: "킵노트 하나에는 최대 10개의 킵박스를 지정할 수 있어요.",
   searchPlaceholder: "제품명, 키워드로 검색하세요",
   searchPlaceholderInCategory: "이 킵박스 내에서 검색",
   deleteNote: "이 킵노트를 삭제할까요? 삭제한 정보는 복구할 수 없어요.",
-  deleteCategory:
-    "이 킵박스와 해당 킵박스에만 속한 킵노트가 삭제됩니다. 다른 킵박스에도 속한 킵노트는 유지됩니다. 계속하시겠습니까?",
+  deleteCategory: "킵박스를 삭제해도 킵노트는 계속 저장된 상태로 유지됩니다",
 } as const;

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, ImageIcon } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { KeyInfoGroup, Source } from "@/lib/types";
+import { ImagePlaceholderIcon } from "../ui/icons";
 import { SparkleStar } from "../ui/Sparkle";
 
 /** 정사각형 썸네일. 이미지가 없으면 중립 기본 이미지로 대체한다. */
@@ -20,7 +21,7 @@ export function Thumbnail({
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showImage = src !== null && src !== failedSrc;
   const box = (
-    <div className="relative mx-auto flex size-36 items-center justify-center overflow-hidden rounded-2xl bg-fog">
+    <div className="relative mx-auto flex size-36 items-center justify-center overflow-hidden rounded-2xl border border-[#eceff3] bg-fog">
       {showImage ? (
         // 원본 썸네일은 임의의 외부 도메인이라 next/image 최적화 대상이 아니다.
         // eslint-disable-next-line @next/next/no-img-element
@@ -32,7 +33,7 @@ export function Thumbnail({
           onError={() => setFailedSrc(src)}
         />
       ) : (
-        <ImageIcon className="size-12 text-slate" aria-label="썸네일 없음" />
+        <ImagePlaceholderIcon className="size-20 text-[#b8c0cc]" aria-label="썸네일 없음" />
       )}
       {href && showArrow ? (
         // 원문으로 이동함을 알리는 화살표. 배경 박스 없이 아이콘만 둔다.

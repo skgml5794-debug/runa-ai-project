@@ -1,8 +1,9 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
+import { Info, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { uid } from "@/lib/async";
+import { categoryColor } from "@/lib/category-colors";
 import { normalizeCategoryName, validateCategoryName } from "@/lib/categories";
 import {
   CATEGORY_NAME_MAX,
@@ -46,8 +47,36 @@ export interface EditorInitial extends EditorValues {
   dateLabel: string;
 }
 
+/** 첫 요약 화면에서 항상 보여주는 핵심 정보 영역(순서 고정). */
+const DEFAULT_GROUPS = ["제품", "장소", "Tip"] as const;
+const LABEL_MAX = 10;
+
+/** 편집 중인 핵심 정보 묶음. fallback은 이름 칸을 비웠을 때 쓰는 원래 이름이다. */
+interface EditableGroup extends KeyInfoGroup {
+  fallback: string;
+}
+
+/**
+ * 첫 요약 화면: 항목이 없어도 제품·장소·Tip 영역을 모두 보여주고, 빈 영역에는 빈 입력칸 하나를 둔다.
+ * 수정 화면: 저장된 묶음만 그대로 보여준다.
+ */
+function toEditableGroups(keyInfo: KeyInfoGroup[], firstSummary: boolean): EditableGroup[] {
+  const groups = keyInfo.map((group) => ({ ...group, fallback: group.label }));
+  if (!firstSummary) return groups;
+  const defaults = DEFAULT_GROUPS.map(
+    (label) => groups.find((group) => group.label === label) ?? { label, items: [], fallback: label },
+  );
+  const others = groups.filter((group) => !DEFAULT_GROUPS.some((label) => label === group.label));
+  return [...defaults, ...others].map((group) => ({
+    ...group,
+    items: group.items.length > 0 ? group.items : [""],
+  }));
+}
+
 interface SummaryEditorProps {
   initial: EditorInitial;
+  /** 저장 전 첫 요약 화면이면 true. 핵심 정보 영역을 모두 보여주고 이름도 고칠 수 있다. */
+  firstSummary?: boolean;
   onSave(values: EditorValues, pending: PendingCategory[]): Promise<void>;
   onClose(): void;
 }
@@ -67,7 +96,12 @@ const FIELD_BASE = "border-mist focus:border-slate";
  * 새 요약 결과 화면과 저장된 킵노트의 수정 화면이 함께 쓰는 편집기.
  * 제목·핵심 요약 줄·핵심 정보 항목의 텍스트와 킵박스 지정만 바꿀 수 있다.
  */
-export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) {
+export function SummaryEditor({
+  initial,
+  firstSummary = false,
+  onSave,
+  onClose,
+}: SummaryEditorProps) {
   const { categories } = useKeepnote();
 
   const [title, setTitle] = useState(initial.title);
@@ -75,7 +109,9 @@ export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) 
   const [lines, setLines] = useState(
     initial.summaryLines.length > 0 ? initial.summaryLines : [""],
   );
-  const [keyInfo, setKeyInfo] = useState(initial.keyInfo);
+  const [keyInfo, setKeyInfo] = useState(() =>
+    toEditableGroups(initial.keyInfo, firstSummary),
+  );
   const [selectedIds, setSelectedIds] = useState(initial.categoryIds);
   const [pending, setPending] = useState<PendingCategory[]>([]);
   const [adding, setAdding] = useState(false);
@@ -88,7 +124,7 @@ export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) 
       {
         title: initial.title,
         summaryLines: initial.summaryLines.length > 0 ? initial.summaryLines : [""],
-        keyInfo: initial.keyInfo,
+        keyInfo: toEditableGroups(initial.keyInfo, firstSummary),
         categoryIds: initial.categoryIds,
       },
       0,
@@ -170,7 +206,7 @@ export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) 
           summaryLines: lines.map((line) => line.trim()).filter((line) => line !== ""),
           keyInfo: keyInfo
             .map((group) => ({
-              label: group.label,
+              label: group.label.trim() || group.fallback,
               items: group.items.map((item) => item.trim()).filter((item) => item !== ""),
             }))
             .filter((group) => group.items.length > 0),
@@ -186,6 +222,11 @@ export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) 
   const updateLine = (index: number, value: string) =>
     setLines((previous) =>
       previous.map((line, i) => (i === index ? value : line)),
+    );
+
+  const updateKeyInfoLabel = (groupIndex: number, value: string) =>
+    setKeyInfo((previous) =>
+      previous.map((group, gi) => (gi === groupIndex ? { ...group, label: value } : group)),
     );
 
   const updateKeyInfoItem = (
@@ -213,7 +254,7 @@ export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) 
     }
   };
 
-  const hasKeyInfo = keyInfo.some((group) => group.items.length > 0);
+  const hasKeyInfo = firstSummary || keyInfo.some((group) => group.items.length > 0);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
@@ -257,7 +298,17 @@ export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) 
         </div>
 
         <section className="space-y-3">
-          <SectionTitle>핵심 요약</SectionTitle>
+          {firstSummary ? (
+            <div className="flex items-center justify-between gap-3">
+              <SectionTitle>핵심 요약</SectionTitle>
+              <p className="flex items-center gap-1.5 text-xs text-slate-deep">
+                <Info className="size-3.5 shrink-0" aria-hidden />
+                {MESSAGES.summaryEditHint}
+              </p>
+            </div>
+          ) : (
+            <SectionTitle>핵심 요약</SectionTitle>
+          )}
           <ul className="space-y-2">
             {lines.map((line, index) => (
               <li key={index}>
@@ -279,13 +330,27 @@ export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) 
             <div className="space-y-4 rounded-2xl bg-fog p-4">
               {keyInfo.map((group, groupIndex) =>
                 group.items.length === 0 ? null : (
-                  <div key={`${group.label}-${groupIndex}`} className="space-y-2">
-                    <KeyInfoLabel>{group.label}</KeyInfoLabel>
+                  <div key={groupIndex} className="space-y-2">
+                    {firstSummary ? (
+                      <input
+                        aria-label={`${group.fallback} 이름`}
+                        value={group.label}
+                        maxLength={LABEL_MAX}
+                        size={Math.max(group.label.length, 2)}
+                        onChange={(event) => updateKeyInfoLabel(groupIndex, event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") event.preventDefault();
+                        }}
+                        className="block max-w-full rounded-full border border-transparent bg-white px-3 py-1 text-xs font-semibold text-graphite outline-none focus:border-slate"
+                      />
+                    ) : (
+                      <KeyInfoLabel>{group.label}</KeyInfoLabel>
+                    )}
                     <ul className="space-y-2">
                       {group.items.map((item, itemIndex) => (
                         <li key={itemIndex}>
                           <AutoTextarea
-                            aria-label={`${group.label} ${itemIndex + 1}번째 항목`}
+                            aria-label={`${group.fallback} ${itemIndex + 1}번째 항목`}
                             value={item}
                             onChange={(event) =>
                               updateKeyInfoItem(groupIndex, itemIndex, event.target.value)
@@ -306,11 +371,12 @@ export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) 
         <section className="space-y-3">
           <SectionTitle>킵박스</SectionTitle>
           <div className="flex flex-wrap gap-2">
-            {allCategories.map((category) => {
+            {allCategories.map((category, index) => {
               const selected = validSelected.includes(category.id);
               return (
                 <Chip
                   key={category.id}
+                  tone={categoryColor(index)}
                   selected={selected}
                   disabled={!selected && atNoteMax}
                   onClick={() => toggleCategory(category.id)}
@@ -325,7 +391,7 @@ export function SummaryEditor({ initial, onSave, onClose }: SummaryEditorProps) 
               aria-expanded={adding}
               disabled={atTotalMax || atNoteMax}
               onClick={() => setAdding((open) => !open)}
-              className="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-dashed border-mist px-3 text-graphite disabled:opacity-40"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-mist bg-white px-3 text-graphite disabled:opacity-40"
             >
               <Plus className="size-5" aria-hidden />
             </button>

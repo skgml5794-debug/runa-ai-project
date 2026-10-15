@@ -66,9 +66,8 @@ export function countByCategory(
 
 /**
  * 카테고리를 삭제할 때 킵노트에 적용할 규칙.
- * - 해당 카테고리의 분류만 제거한다. 다른 카테고리에도 속한 킵노트는 유지한다.
- * - 제거 후 어떤 카테고리에도 속하지 않게 되는 킵노트는 함께 삭제한다.
- * - 원래부터 카테고리가 없던 킵노트는 영향받지 않는다.
+ * - 해당 카테고리의 분류만 제거한다. 킵노트는 삭제하지 않는다.
+ * - 다른 카테고리가 남지 않은 킵노트는 미분류(카테고리 없음)가 된다.
  */
 export function removeCategoryFromNotes(
   notes: readonly Note[],
@@ -80,9 +79,10 @@ export function removeCategoryFromNotes(
       result.push(note);
       continue;
     }
-    const remaining = note.categoryIds.filter((id) => id !== categoryId);
-    if (remaining.length === 0) continue;
-    result.push({ ...note, categoryIds: remaining });
+    result.push({
+      ...note,
+      categoryIds: note.categoryIds.filter((id) => id !== categoryId),
+    });
   }
   return result;
 }

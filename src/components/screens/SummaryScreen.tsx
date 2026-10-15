@@ -47,6 +47,7 @@ export function SummaryScreen() {
 
   return (
     <SummaryEditor
+      firstSummary
       initial={{
         url: result.url,
         thumbnailUrl: result.thumbnailUrl,

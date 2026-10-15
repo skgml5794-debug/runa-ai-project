@@ -82,9 +82,11 @@ describe("카테고리 삭제 규칙", () => {
     expect(result[0].categoryIds).toEqual(["y"]);
   });
 
-  it("분류 제거 후 어떤 카테고리에도 속하지 않게 되면 함께 삭제한다", () => {
+  it("분류 제거 후 어떤 카테고리에도 속하지 않게 되어도 킵노트는 삭제하지 않고 미분류로 둔다", () => {
     const only = makeNote({ id: "only", categoryIds: ["x"] });
-    expect(removeCategoryFromNotes([only], "x")).toEqual([]);
+    const result = removeCategoryFromNotes([only], "x");
+    expect(result.map((n) => n.id)).toEqual(["only"]);
+    expect(result[0].categoryIds).toEqual([]);
   });
 
   it("원래 카테고리가 없던 킵노트는 영향받지 않는다", () => {

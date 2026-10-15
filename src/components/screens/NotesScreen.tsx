@@ -3,6 +3,7 @@
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { categoryColor } from "@/lib/category-colors";
 import { MESSAGES } from "@/lib/constants";
 import {
   UNCATEGORIZED_ID,
@@ -126,7 +127,7 @@ export function NotesScreen() {
           필요한 정보만 모아두고, 언제든 다시 찾아보세요
         </p>
         <div className="flex items-center gap-2">
-          <label className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-xl bg-fog px-4">
+          <label className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-xl bg-fog-soft px-4">
             <Search className="size-5 shrink-0 text-placeholder" aria-hidden />
             <input
               type="search"
@@ -173,9 +174,10 @@ export function NotesScreen() {
             >
               전체 {matchedNotes.length}
             </Chip>
-            {categories.map((category) => (
+            {categories.map((category, index) => (
               <Chip
                 key={category.id}
+                tone={categoryColor(index)}
                 selected={activeCategory?.id === category.id}
                 onClick={() => updateParams({ category: category.id })}
               >

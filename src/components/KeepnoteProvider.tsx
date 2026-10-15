@@ -24,6 +24,8 @@ interface KeepnoteContextValue {
   addCategories(names: string[]): Promise<Category[]>;
   renameCategory(id: string, name: string): Promise<void>;
   deleteCategory(id: string): Promise<void>;
+  /** 킵박스 순서를 저장한다. 화면에는 바로 반영한다. */
+  reorderCategories(ids: string[]): Promise<void>;
 }
 
 const KeepnoteContext = createContext<KeepnoteContextValue | null>(null);
@@ -90,6 +92,16 @@ export function KeepnoteProvider({ children }: { children: ReactNode }) {
       },
       async deleteCategory(id) {
         await repository.deleteCategory(id);
+        await reload();
+      },
+      async reorderCategories(ids) {
+        // 놓는 순간 목록이 되돌아가 보이지 않도록 먼저 화면 순서를 바꾼다.
+        setCategories((previous) => {
+          const byId = new Map(previous.map((category) => [category.id, category]));
+          const ordered = ids.flatMap((id) => byId.get(id) ?? []);
+          return [...ordered, ...previous.filter((category) => !ids.includes(category.id))];
+        });
+        await repository.reorderCategories(ids);
         await reload();
       },
     }),

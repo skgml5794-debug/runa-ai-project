@@ -26,7 +26,7 @@ type Sample = Omit<SummaryResult, "url" | "source" | "authorId" | "thumbnailUrl"
 
 const SAMPLES: Sample[] = [
   {
-    thumbnail: gradientThumbnail("#ebdafd", "#ad6df4"),
+    thumbnail: gradientThumbnail("#e5e9ef", "#9aa7b8"),
     title: "성수동 신상 카페 3곳 한 번에 정리",
     summaryLines: [
       "성수동에 새로 문을 연 카페 3곳을 분위기와 대표 메뉴 기준으로 비교했다.",

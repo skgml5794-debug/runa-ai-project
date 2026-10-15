@@ -55,7 +55,7 @@ export function LoadingScreen() {
       <h1 className="mt-1.5 text-2xl font-extrabold tracking-[-0.02em] text-ultra-violet">
         핵심만 추리고 있어요
       </h1>
-      <MessageGlyph className="mt-6 size-40 drop-shadow-[0_12px_24px_rgba(134,47,231,0.18)]" />
+      <MessageGlyph className="mt-6 size-40 drop-shadow-[0_12px_24px_rgba(55,65,81,0.18)]" />
 
       {failure ? (
         <AlertDialog

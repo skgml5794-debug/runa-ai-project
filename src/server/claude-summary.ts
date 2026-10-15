@@ -20,11 +20,12 @@ const SYSTEM_PROMPT = `당신은 소셜 미디어 게시물을 한국어로 정�
 - sufficient: 요약할 만한 실질적인 내용이 있으면 true, 없으면 false. false이면 나머지는 빈 값으로 둡니다. 글이 짧아도 확인되는 내용이 있으면 그 범위에서 요약하세요.
 - title: 글의 핵심을 나타내는 짧은 한 문장 (예: "서울 떡볶이 맛집 추천"). ${TITLE_MAX}자 이내.
 - summary: 핵심 내용만 간결하게 정리한 한 문단. 글의 노하우와 설명을 바탕으로 하되 줄바꿈 없이 이어서 씁니다.
+  tips에 넣은 방법·노하우는 summary에 다시 쓰지 마세요. summary에는 tips에 없는 내용(무엇에 대한 글인지, 배경, 결론)만 담습니다.
   다른 사람의 글을 전달하는 표현("~했다고 합니다", "~소개하는 글입니다", "~라고 말합니다")은 쓰지 마세요.
   핵심 정보만 추려 명사형·단문형으로 씁니다. 예: "구매하지 못함", "제품 소개", "얼음 12시간 유지, 세척은 베이킹소다".
 - products: 글에 나온 제품명, 브랜드명, 모델명. 원문에 쓰인 표기 그대로 옮기고 줄이거나 바꾸거나 번역하지 마세요. 없으면 빈 배열.
 - places: 글에 나온 장소. 없으면 빈 배열.
-- tip: 글에 나온 방법과 노하우 중 가장 중요한 것을 중복 없이 합친 짧은 표현. "~선택하면 됩니다" 대신 "~선택"처럼 간결한 명사형·단문형으로 씁니다. 없으면 빈 문자열.`;
+- tips: 글에 나온 방법과 노하우를 항목별로 나눈 배열. 한 항목에는 한 가지 내용만 담고, 쉼표로 여러 개를 나열하거나 긴 문장으로 쓰지 마세요. "~선택하면 됩니다" 대신 "~선택"처럼 간결한 명사형·단문형으로 씁니다. 서로 겹치는 항목은 하나로 합치고 최대 5개. 없으면 빈 배열.`;
 
 const OUTPUT_SCHEMA = {
   type: "object",
@@ -34,9 +35,9 @@ const OUTPUT_SCHEMA = {
     summary: { type: "string" },
     products: { type: "array", items: { type: "string" } },
     places: { type: "array", items: { type: "string" } },
-    tip: { type: "string" },
+    tips: { type: "array", items: { type: "string" } },
   },
-  required: ["sufficient", "title", "summary", "products", "places", "tip"],
+  required: ["sufficient", "title", "summary", "products", "places", "tips"],
   additionalProperties: false,
 } as const;
 
@@ -46,7 +47,7 @@ export interface ClaudeOutput {
   summary: string;
   products: string[];
   places: string[];
-  tip: string;
+  tips: string[];
 }
 
 /** 대소문자와 공백 차이를 무시하고 비교하기 위한 정규화 */
@@ -73,12 +74,12 @@ export function validateOutput(
     values.map((value) => value.trim()).filter((value) => value !== "");
   const products = clean(output.products).filter((name) => haystack.includes(normalize(name)));
   const places = clean(output.places);
-  const tip = output.tip.replace(/\s+/g, " ").trim();
+  const tips = clean(output.tips.map((value) => value.replace(/\s+/g, " ")));
 
   const keyInfo: KeyInfoGroup[] = [
     { label: "제품", items: products },
     { label: "장소", items: places },
-    { label: "Tip", items: tip ? [tip] : [] },
+    { label: "Tip", items: tips },
   ].filter((group) => group.items.length > 0);
   return { title, summaryLines: [summary], keyInfo };
 }

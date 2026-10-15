@@ -91,6 +91,23 @@ export function PencilIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** 순서 변경 핸들(햄버거). 굵기 2의 둥근 가로 막대 세 개 */
+export function GripIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <SolidIcon
+      {...props}
+      shape={
+        <>
+          <rect x="4" y="5.2" width="16" height="3.2" rx="1.6" />
+          <rect x="4" y="10.4" width="16" height="3.2" rx="1.6" />
+          <rect x="4" y="15.6" width="16" height="3.2" rx="1.6" />
+        </>
+      }
+      cuts={null}
+    />
+  );
+}
+
 export function TrashIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <SolidIcon
@@ -109,5 +126,48 @@ export function TrashIcon(props: SVGProps<SVGSVGElement>) {
         </>
       }
     />
+  );
+}
+
+/** 이미지가 없을 때 보여주는 사진 아이콘. 기존 아이콘처럼 둥근 솔리드 면으로 그린다. */
+export function ImagePlaceholderIcon(props: SVGProps<SVGSVGElement>) {
+  const id = useId();
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      role={props["aria-label"] ? "img" : undefined}
+      aria-hidden={props["aria-label"] ? undefined : true}
+      {...props}
+    >
+      <defs>
+        <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+          <rect width="24" height="24" fill="#fff" />
+          {/* 앞 사진 둘레를 비워 뒤 사진과 겹쳐 보이지 않게 한다 */}
+          <rect x="4" y="7.2" width="18" height="14.6" rx="3.4" fill="#000" />
+        </mask>
+      </defs>
+      <g mask={`url(#${id})`}>
+        <rect
+          x="3"
+          y="3.6"
+          width="15"
+          height="13"
+          rx="2.6"
+          transform="rotate(-11 10.5 10)"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.2}
+        />
+      </g>
+      <g fill="currentColor" stroke="currentColor" strokeLinejoin="round">
+        <path
+          fillRule="evenodd"
+          stroke="none"
+          d="M8.1 8.5h9.8a2.6 2.6 0 0 1 2.6 2.6v6.8a2.6 2.6 0 0 1-2.6 2.6H8.1a2.6 2.6 0 0 1-2.6-2.6v-6.8a2.6 2.6 0 0 1 2.6-2.6Zm.4 2a1 1 0 0 0-1 1v6.4a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-6.4a1 1 0 0 0-1-1h-9Z"
+        />
+        <circle cx="15.6" cy="13.4" r="1.3" stroke="none" />
+        <path strokeWidth={1.2} d="M8.7 17.6 11.5 13.8l2.2 2.8 1.3-1.3 2.6 2.3H8.7Z" />
+      </g>
+    </svg>
   );
 }

@@ -29,7 +29,7 @@ export function BottomNav() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-[69px] flex-col items-center justify-start gap-1 pt-2.5 text-xs font-medium ${
-                  active ? "text-voltage-violet" : "text-slate"
+                  active ? "text-voltage-violet" : "text-[#b4bcc9]"
                 }`}
               >
                 <Icon className="size-6" aria-hidden />
