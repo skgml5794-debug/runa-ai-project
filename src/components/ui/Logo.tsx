@@ -1,13 +1,20 @@
-/** 앱 로고: 킵노트 KEEPNOTE */
+/** 앱 로고: K 심볼. 배경 없는 이미지를 마스크로 써서 연한 회색으로 칠한다. */
 export function Logo() {
   return (
-    <p className="flex items-baseline gap-1.5">
-      <span className="text-xl font-extrabold tracking-tight text-midnight-ink">
-        킵노트
-      </span>
-      <span className="text-[11px] font-semibold tracking-[0.2em] text-slate">
-        KEEPNOTE
-      </span>
-    </p>
+    <span
+      role="img"
+      aria-label="킵노트"
+      className="block h-4 w-[15.5px] bg-[#b4bcc9]"
+      style={{
+        maskImage: "url(/logo-k.png)",
+        WebkitMaskImage: "url(/logo-k.png)",
+        maskSize: "contain",
+        WebkitMaskSize: "contain",
+        maskRepeat: "no-repeat",
+        WebkitMaskRepeat: "no-repeat",
+        maskPosition: "center",
+        WebkitMaskPosition: "center",
+      }}
+    />
   );
 }

@@ -21,11 +21,11 @@ export const MESSAGES = {
   emptyCategories: "만든 킵박스가 없어요.",
   categoryNamePlaceholder: "킵박스명을 입력해주세요",
   categoryDuplicate: "이미 사용 중인 킵박스명이에요.",
-  summaryNotices: ["AI 요약은 정확하지 않을 수 있어요.", "없애고 싶은 정보는 비워두세요."],
+  summaryNotices: ["AI 요약은 정확하지 않을 수 있어요."],
   categoryTotalMax: "킵박스는 최대 20개까지 가능해요",
   categoryNoteMax: "킵노트 하나에는 최대 10개의 킵박스를 지정할 수 있어요.",
   searchPlaceholder: "제품명, 키워드로 검색하세요",
   searchPlaceholderInCategory: "이 킵박스 내에서 검색",
-  deleteNote: "이 킵노트를 삭제할까요? 삭제한 정보는 복구할 수 없어요.",
+  deleteNote: "이 킵노트를 삭제할까요?\n삭제한 정보는 복구할 수 없어요.",
   deleteCategory: "킵박스를 삭제해도 킵노트는 계속 저장된 상태로 유지됩니다",
 } as const;

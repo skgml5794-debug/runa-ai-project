@@ -18,7 +18,7 @@ export function NoteCard({
   return (
     <Link
       href={`/notes/${note.id}`}
-      className="block rounded-xl bg-fog px-8 pb-5 pt-6 transition-colors hover:bg-fog-hover"
+      className="block rounded-2xl bg-fog px-8 pb-5 pt-6 transition-colors hover:bg-fog-hover"
     >
       <h2 className="truncate text-base font-bold text-midnight-ink">
         {note.title}

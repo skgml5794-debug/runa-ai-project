@@ -19,7 +19,6 @@ import { Button } from "../ui/Button";
 import { Chip } from "../ui/Chip";
 import { AlertDialog, ConfirmDialog } from "../ui/Dialog";
 import {
-  KeyInfoLabel,
   MetaLine,
   SectionTitle,
   Thumbnail,
@@ -50,6 +49,26 @@ export interface EditorInitial extends EditorValues {
 /** 첫 요약 화면에서 항상 보여주는 핵심 정보 영역(순서 고정). */
 const DEFAULT_GROUPS = ["제품", "장소", "Tip"] as const;
 const LABEL_MAX = 10;
+const NEW_GROUP_LABEL = "새 카테고리";
+const BULLET = "•";
+
+/** 항목 목록을 불릿이 붙은 여러 줄 글로 바꾼다. 항목이 비어 있으면 빈 글. */
+function itemsToText(items: string[]): string {
+  if (items.length === 1 && items[0] === "") return "";
+  return items.map((item) => `${BULLET} ${item}`).join("\n");
+}
+
+/**
+ * 불릿 글을 항목 목록으로 되돌린다. 줄마다 불릿이 자동으로 붙고,
+ * 불릿만 남은 줄(불릿을 지운 줄)은 항목에서 빠진다.
+ */
+function textToItems(text: string): string[] {
+  const items = text
+    .split("\n")
+    .filter((line) => line.trim() !== BULLET)
+    .map((line) => (line.startsWith(BULLET) ? line.slice(1).replace(/^ /, "") : line));
+  return items.length > 0 ? items : [""];
+}
 
 /** 편집 중인 핵심 정보 묶음. fallback은 이름 칸을 비웠을 때 쓰는 원래 이름이다. */
 interface EditableGroup extends KeyInfoGroup {
@@ -89,7 +108,7 @@ function snapshot(values: EditorValues, pendingCount: number): string {
   });
 }
 
-const FIELD_BOX = "rounded-xl px-4 py-3 text-base leading-7";
+const FIELD_BOX = "rounded-2xl px-4 py-3 text-base leading-7";
 const FIELD_BASE = "border-mist focus:border-slate";
 
 /**
@@ -229,23 +248,21 @@ export function SummaryEditor({
       previous.map((group, gi) => (gi === groupIndex ? { ...group, label: value } : group)),
     );
 
-  const updateKeyInfoItem = (
-    groupIndex: number,
-    itemIndex: number,
-    value: string,
-  ) =>
+  const updateKeyInfoText = (groupIndex: number, text: string) =>
     setKeyInfo((previous) =>
       previous.map((group, gi) =>
-        gi === groupIndex
-          ? {
-              ...group,
-              items: group.items.map((item, ii) =>
-                ii === itemIndex ? value : item,
-              ),
-            }
-          : group,
+        gi === groupIndex ? { ...group, items: textToItems(text) } : group,
       ),
     );
+
+  const removeKeyInfoGroup = (groupIndex: number) =>
+    setKeyInfo((previous) => previous.filter((_, gi) => gi !== groupIndex));
+
+  const addKeyInfoGroup = () =>
+    setKeyInfo((previous) => [
+      ...previous,
+      { label: "", fallback: NEW_GROUP_LABEL, items: [""] },
+    ]);
 
   // Enter만 누르면 줄바꿈하지 않고, Shift+Enter로 줄바꿈한다. (한글 조합 중에는 건드리지 않는다)
   const preventNewline = (event: React.KeyboardEvent) => {
@@ -253,8 +270,6 @@ export function SummaryEditor({
       event.preventDefault();
     }
   };
-
-  const hasKeyInfo = firstSummary || keyInfo.some((group) => group.items.length > 0);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
@@ -286,7 +301,7 @@ export function SummaryEditor({
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.preventDefault();
               }}
-              className={`min-h-12 w-full rounded-xl border bg-fog px-4 text-center text-[26px] font-bold leading-snug outline-none transition-colors ${
+              className={`min-h-14 w-full rounded-2xl border bg-white px-4 text-center text-[26px] font-bold leading-snug outline-none transition-colors ${
                 title.trim() === "" ? "border-danger" : FIELD_BASE
               }`}
             />
@@ -308,56 +323,61 @@ export function SummaryEditor({
                   value={line}
                   onChange={(event) => updateLine(index, event.target.value)}
                   onKeyDown={preventNewline}
-                  className={`${FIELD_BOX} bg-fog ${FIELD_BASE}`}
+                  className={`${FIELD_BOX} bg-white ${FIELD_BASE}`}
                 />
               </li>
             ))}
           </ul>
         </section>
 
-        {hasKeyInfo ? (
-          <section className="space-y-3">
-            <SectionTitle>핵심 정보</SectionTitle>
-            <div className="space-y-4 rounded-2xl bg-fog p-4">
-              {keyInfo.map((group, groupIndex) =>
-                group.items.length === 0 ? null : (
-                  <div key={groupIndex} className="space-y-2">
-                    {firstSummary ? (
-                      <input
-                        aria-label={`${group.fallback} 이름`}
-                        value={group.label}
-                        maxLength={LABEL_MAX}
-                        size={Math.max(group.label.length, 2)}
-                        onChange={(event) => updateKeyInfoLabel(groupIndex, event.target.value)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") event.preventDefault();
-                        }}
-                        className="block max-w-full rounded-full border border-transparent bg-white px-3 py-1 text-xs font-semibold text-graphite outline-none focus:border-slate"
-                      />
-                    ) : (
-                      <KeyInfoLabel>{group.label}</KeyInfoLabel>
-                    )}
-                    <ul className="space-y-2">
-                      {group.items.map((item, itemIndex) => (
-                        <li key={itemIndex}>
-                          <AutoTextarea
-                            aria-label={`${group.fallback} ${itemIndex + 1}번째 항목`}
-                            value={item}
-                            onChange={(event) =>
-                              updateKeyInfoItem(groupIndex, itemIndex, event.target.value)
-                            }
-                            onKeyDown={preventNewline}
-                            className={`${FIELD_BOX} bg-white ${FIELD_BASE}`}
-                          />
-                        </li>
-                      ))}
-                    </ul>
+        <section className="space-y-3">
+          <SectionTitle>핵심 정보</SectionTitle>
+          <div className="space-y-4 rounded-2xl bg-fog p-4">
+            {keyInfo.map((group, groupIndex) =>
+              group.items.length === 0 ? null : (
+                <div key={groupIndex} className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <input
+                      aria-label={`${group.fallback} 이름`}
+                      value={group.label}
+                      maxLength={LABEL_MAX}
+                      placeholder={group.fallback}
+                      size={Math.max(group.label.length, group.fallback.length, 2)}
+                      onChange={(event) => updateKeyInfoLabel(groupIndex, event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") event.preventDefault();
+                      }}
+                      className="block max-w-full rounded-full border border-transparent bg-white px-3 py-1 text-xs font-semibold text-graphite outline-none focus:border-slate"
+                    />
+                    <button
+                      type="button"
+                      aria-label={`${group.label || group.fallback} 삭제`}
+                      onClick={() => removeKeyInfoGroup(groupIndex)}
+                      className="shrink-0 px-1 py-1 text-sm text-[#8b95a5]"
+                    >
+                      삭제
+                    </button>
                   </div>
-                ),
-              )}
-            </div>
-          </section>
-        ) : null}
+                  <AutoTextarea
+                    aria-label={`${group.fallback} 내용`}
+                    value={itemsToText(group.items)}
+                    onChange={(event) => updateKeyInfoText(groupIndex, event.target.value)}
+                    className={`${FIELD_BOX} bg-white ${FIELD_BASE}`}
+                  />
+                </div>
+              ),
+            )}
+            <button
+              type="button"
+              aria-label="핵심 정보 카테고리 추가"
+              onClick={addKeyInfoGroup}
+              className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-2xl border border-mist bg-white text-sm font-medium text-graphite"
+            >
+              <Plus className="size-4" aria-hidden />
+              카테고리 추가
+            </button>
+          </div>
+        </section>
 
         <section className="space-y-3">
           <SectionTitle>킵박스</SectionTitle>
@@ -405,7 +425,7 @@ export function SummaryEditor({
                       commitNewCategory();
                     }
                   }}
-                  className={`min-h-12 min-w-0 flex-1 rounded-xl border px-4 text-base outline-none ${
+                  className={`min-h-14 min-w-0 flex-1 rounded-2xl border px-4 text-base outline-none ${
                     nameError === "duplicate"
                       ? "border-danger"
                       : "border-mist focus:border-slate"
@@ -433,7 +453,7 @@ export function SummaryEditor({
         </section>
 
         {firstSummary ? (
-          <ul className="space-y-1 border-t border-[#e9edf2] pt-5 text-sm text-slate-deep">
+          <ul className="-mx-6 space-y-1 border-t border-[#e9edf2] px-6 pt-5 text-sm text-slate-deep">
             {MESSAGES.summaryNotices.map((notice) => (
               <li key={notice} className="flex gap-2">
                 <span aria-hidden className="mt-[0.7em] size-[3px] shrink-0 rounded-full bg-slate" />
@@ -446,7 +466,7 @@ export function SummaryEditor({
 
       <footer className="shrink-0 bg-white px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
         <Button fullWidth disabled={saving} onClick={handleSave}>
-          킵노트에 저장
+          {firstSummary ? "킵노트에 저장" : "저장"}
         </Button>
       </footer>
 

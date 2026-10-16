@@ -82,7 +82,7 @@ export function NoteDetailScreen() {
       </header>
 
       <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 pb-8 pt-2">
-        <div className="mb-[88px] space-y-4">
+        <div className="mb-12 space-y-4">
           <Thumbnail
             source={note.source}
             src={note.thumbnailUrl}
@@ -103,7 +103,7 @@ export function NoteDetailScreen() {
 
         {note.summaryLines.length > 0 ? (
           <section className="space-y-2">
-            <SectionTitle star>AI 요약</SectionTitle>
+            <SectionTitle>AI 요약</SectionTitle>
             <SummaryBullets lines={note.summaryLines} />
           </section>
         ) : null}
@@ -112,7 +112,7 @@ export function NoteDetailScreen() {
 
         {noteCategories.length > 0 ? (
           <section className="space-y-3">
-            <SectionTitle star>킵박스</SectionTitle>
+            <SectionTitle>킵박스</SectionTitle>
             <div className="flex flex-wrap gap-2">
               {noteCategories.map((category) => (
                 <StaticChip key={category.id} tone={categoryColor(categories.indexOf(category))}>

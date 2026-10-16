@@ -197,14 +197,14 @@ export function CategoriesScreen() {
             disabled={atMax}
             placeholder={MESSAGES.categoryNamePlaceholder}
             onChange={(event) => setNewName(event.target.value)}
-            className={`min-h-12 min-w-0 flex-1 rounded-xl bg-fog px-4 text-base outline-none disabled:opacity-60 ${
+            className={`min-h-14 min-w-0 flex-1 rounded-2xl border border-[#e3e7ed] bg-white px-4 text-base outline-none focus:border-slate disabled:opacity-60 ${
               addError === "duplicate" ? "ring-2 ring-danger" : ""
             }`}
           />
           <Button
             type="submit"
             size="sm"
-            className="min-h-12 rounded-xl"
+            className="min-h-14 rounded-2xl"
             disabled={addError === "duplicate" || atMax}
           >
             추가
@@ -243,7 +243,7 @@ export function CategoriesScreen() {
                     else itemRefs.current.delete(category.id);
                   }}
                   style={drag ? { transform: `translateY(${offset}px)` } : undefined}
-                  className={`relative rounded-2xl bg-fog-soft px-4 py-3 ${
+                  className={`relative rounded-2xl bg-fog px-4 py-3 ${
                     dragged ? "z-10 shadow-[0_10px_24px_rgba(31,41,55,0.2)]" : drag ? "transition-transform duration-150" : ""
                   }`}
                 >
@@ -267,7 +267,7 @@ export function CategoriesScreen() {
                               cancelRename();
                             }
                           }}
-                          className={`min-h-12 min-w-0 flex-1 rounded-xl border bg-white px-4 text-base outline-none ${
+                          className={`min-h-14 min-w-0 flex-1 rounded-2xl border bg-white px-4 text-base outline-none ${
                             nameError === "duplicate"
                               ? "border-danger"
                               : "border-mist focus:border-slate"

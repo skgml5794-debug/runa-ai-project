@@ -130,7 +130,7 @@ export function NotesScreen() {
           필요한 정보만 모아두고, 언제든 다시 찾아보세요
         </p>
         <div className="flex items-center gap-2">
-          <label className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-xl bg-fog-soft px-4">
+          <label className="flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-2xl border border-[#e3e7ed] bg-white px-4">
             <Search className="size-5 shrink-0 text-placeholder" aria-hidden />
             <input
               type="search"
@@ -162,7 +162,7 @@ export function NotesScreen() {
             onClick={() =>
               updateParams({ sort: sort === "newest" ? "oldest" : null })
             }
-            className="flex size-12 shrink-0 items-center justify-center rounded-xl text-placeholder"
+            className="flex size-14 shrink-0 items-center justify-center rounded-2xl text-placeholder"
           >
             <SortIcon className="size-6" aria-hidden />
           </button>

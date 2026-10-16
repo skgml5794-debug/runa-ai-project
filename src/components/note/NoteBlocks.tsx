@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import type { KeyInfoGroup, Source } from "@/lib/types";
 import { InstagramIcon, ThreadsIcon } from "../ui/icons";
-import { SparkleStar } from "../ui/Sparkle";
 
 /** 정사각형 썸네일. 이미지가 없으면 중립 기본 이미지로 대체한다. */
 export function Thumbnail({
@@ -83,17 +82,9 @@ export function MetaLine({
   );
 }
 
-export function SectionTitle({
-  children,
-  star = false,
-}: {
-  children: React.ReactNode;
-  /** 제목 앞에 작은 별 아이콘을 붙인다. (킵노트 상세) */
-  star?: boolean;
-}) {
+export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="flex items-center gap-1.5 text-lg font-bold text-midnight-ink">
-      {star ? <SparkleStar className="size-4 shrink-0" /> : null}
       {children}
     </h2>
   );
@@ -112,15 +103,15 @@ export function Bullet() {
 export function SummaryBullets({ lines }: { lines: string[] }) {
   if (lines.length === 1) {
     return (
-      <p className="whitespace-pre-line break-words text-base leading-[26px] text-midnight-ink">
+      <p className="whitespace-pre-line break-words text-base leading-6 text-midnight-ink">
         {lines[0]}
       </p>
     );
   }
   return (
-    <ul className="space-y-1">
+    <ul className="space-y-2">
       {lines.map((line, index) => (
-        <li key={index} className="flex gap-2.5 text-base leading-[26px] text-midnight-ink">
+        <li key={index} className="flex gap-2.5 text-base leading-6 text-midnight-ink">
           <Bullet />
           <span className="min-w-0 whitespace-pre-line break-words">{line}</span>
         </li>
@@ -147,18 +138,17 @@ export function KeyInfoPanel({ groups }: { groups: KeyInfoGroup[] }) {
         id="key-info-title"
         className="flex items-center gap-1.5 text-lg font-bold text-midnight-ink"
       >
-        <SparkleStar className="size-4 shrink-0" />
         핵심 정보
       </h2>
-      <div className="space-y-4 rounded-2xl bg-fog p-4">
+      <div className="space-y-4 rounded-2xl bg-fog px-5 pb-7 pt-5">
         {visible.map((group) => (
           <div key={group.label} className="space-y-2">
             <KeyInfoLabel>{group.label}</KeyInfoLabel>
-            <ul className="space-y-1 pl-3">
+            <ul className="space-y-2 pl-3">
               {group.items.map((item, index) => (
                 <li
                   key={index}
-                  className="flex gap-2.5 text-base leading-[26px] text-midnight-ink"
+                  className="flex gap-2.5 text-base leading-6 text-midnight-ink"
                 >
                   <Bullet />
                   <span className="min-w-0 whitespace-pre-line break-words">{item}</span>

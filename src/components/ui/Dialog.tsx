@@ -59,7 +59,7 @@ function DialogShell({ message, onEscape, children }: DialogShellProps) {
         aria-label="알림"
         className="w-full animate-dialog-in rounded-3xl bg-white p-6"
       >
-        <p className="px-6 text-center text-base leading-relaxed text-midnight-ink">
+        <p className="whitespace-pre-line px-6 text-center text-base leading-relaxed text-midnight-ink">
           {message}
         </p>
         <div className="mt-6 flex gap-3">{children}</div>
