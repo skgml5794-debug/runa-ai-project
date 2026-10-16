@@ -11,14 +11,6 @@ import { Logo } from "../ui/Logo";
 import { Sparkle } from "../ui/Sparkle";
 import { AlertDialog } from "../ui/Dialog";
 
-const TOPICS = [
-  { label: "추천 제품", emoji: "🛍️" },
-  { label: "레시피", emoji: "🍳" },
-  { label: "데이트·피크닉 코스", emoji: "🧺" },
-  { label: "생활·업무 노하우", emoji: "💡" },
-  { label: "맛집·카페", emoji: "☕" },
-] as const;
-
 export function HomeScreen() {
   const router = useRouter();
   // 오류가 나거나 로딩 중 뒤로 돌아와도 입력한 링크를 유지한다.
@@ -58,52 +50,42 @@ export function HomeScreen() {
           submit();
         }}
       >
-        <div className="flex flex-col items-center gap-3 text-center">
-          <h1 className="text-[2rem] font-extrabold leading-[1.25] tracking-[-0.2px] text-voltage-violet">
-            {MESSAGES.homeHeadline.split("\n").map((line, index) => (
-              <span key={line} className="block">
-                {line}
-                {index === 0 ? (
-                  <Sparkle className="ml-2 inline-block size-7 align-[-2px]" float spread />
-                ) : null}
-              </span>
-            ))}
+        <div className="flex flex-col items-center space-y-3 text-center">
+          <Sparkle className="size-14" float />
+          <p className="text-base text-graphite">
+            링크만 넣으면 핵심만 추려서 저장해요
+          </p>
+          <h1 className="font-display text-[2rem] font-extrabold leading-[1.2] tracking-[-0.3px] text-voltage-violet">
+            {MESSAGES.homeHeadline}
           </h1>
-          <p className="text-balance break-keep text-base text-graphite">{MESSAGES.homeSubtitle}</p>
-          <ul className="mt-2 flex flex-wrap justify-center gap-1.5">
-            {TOPICS.map(({ label, emoji }) => (
-              <li
-                key={label}
-                className="flex items-center gap-1.5 rounded-full bg-white py-1 pl-1 pr-3 text-[13px] font-medium text-midnight-ink shadow-[0_1px_6px_rgba(31,41,55,0.08)]"
-              >
-                <span
-                  aria-hidden
-                  className="flex size-6 items-center justify-center rounded-full bg-fog text-[13px] leading-none"
-                >
-                  {emoji}
-                </span>
-                {label}
-              </li>
-            ))}
-          </ul>
         </div>
         <div className="space-y-3">
-          <input
-            aria-label="Instagram 또는 Threads 링크"
-            inputMode="url"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            value={link}
-            onChange={(event) =>
-              setSession(SESSION_KEYS.homeLink, event.target.value)
-            }
-            placeholder="인스타그램 또는 스레드 링크를 붙여넣어 주세요"
-            className="min-h-12 w-full rounded-xl bg-fog px-4 text-base outline-none"
-          />
-          <Button type="submit" fullWidth>
-            요약하기
-          </Button>
+          <div className="relative rounded-xl bg-fog">
+            <textarea
+              aria-label="Instagram 또는 Threads 링크"
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              rows={5}
+              value={link}
+              onChange={(event) =>
+                setSession(SESSION_KEYS.homeLink, event.target.value)
+              }
+              onKeyDown={(event) => {
+                // 링크는 한 줄이므로 Enter는 줄바꿈 대신 요약하기로 처리한다. (한글 조합 중 Enter 제외)
+                if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+                  event.preventDefault();
+                  submit();
+                }
+              }}
+              placeholder="인스타그램 또는 스레드 링크를 붙여넣어 주세요"
+              className="block min-h-44 w-full resize-none rounded-xl bg-transparent px-4 pb-16 pt-4 text-base outline-none"
+            />
+            <Button type="submit" size="sm" className="absolute bottom-3 right-3">
+              요약하기
+            </Button>
+          </div>
         </div>
       </form>
 

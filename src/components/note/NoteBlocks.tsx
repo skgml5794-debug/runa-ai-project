@@ -3,23 +3,27 @@
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import type { KeyInfoGroup, Source } from "@/lib/types";
-import { ImagePlaceholderIcon } from "../ui/icons";
+import { InstagramIcon, ThreadsIcon } from "../ui/icons";
 import { SparkleStar } from "../ui/Sparkle";
 
 /** 정사각형 썸네일. 이미지가 없으면 중립 기본 이미지로 대체한다. */
 export function Thumbnail({
+  source,
   src,
   href,
   showArrow = false,
 }: {
+  /** 이미지가 없을 때 보여줄 출처 앱 아이콘 */
+  source: Source;
   src: string | null;
   href?: string;
-  /** 원문 이동 화살표 표시 (Threads만 사용) */
+  /** 원문 이동 화살표 표시 (Threads). 이미지가 없으면 출처와 관계없이 항상 표시한다. */
   showArrow?: boolean;
 }) {
   // 외부 썸네일 주소가 만료되어 불러오지 못하면 기본 이미지로 대체한다.
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showImage = src !== null && src !== failedSrc;
+  const SourceIcon = source === "Threads" ? ThreadsIcon : InstagramIcon;
   const box = (
     <div className="relative mx-auto flex size-36 items-center justify-center overflow-hidden rounded-2xl border border-[#eceff3] bg-fog">
       {showImage ? (
@@ -33,9 +37,12 @@ export function Thumbnail({
           onError={() => setFailedSrc(src)}
         />
       ) : (
-        <ImagePlaceholderIcon className="size-20 text-[#b8c0cc]" aria-label="썸네일 없음" />
+        <SourceIcon
+          className="size-16 text-[#d5dbe3]"
+          aria-label={`${source} 아이콘`}
+        />
       )}
-      {href && showArrow ? (
+      {href && (showArrow || !showImage) ? (
         // 원문으로 이동함을 알리는 화살표. 배경 박스 없이 아이콘만 둔다.
         <ArrowUpRight
           aria-hidden

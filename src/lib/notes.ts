@@ -57,6 +57,11 @@ export function filterAndSortNotes(
   });
 }
 
+/** 킵박스 하나의 저장 수 표기. 99개를 넘으면 99+ */
+export function formatCount(count: number): string {
+  return count > 99 ? "99+" : String(count);
+}
+
 export function countByCategory(
   notes: readonly Note[],
   categoryId: string,

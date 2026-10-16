@@ -11,7 +11,7 @@ import {
   MAX_CATEGORIES,
   MESSAGES,
 } from "@/lib/constants";
-import { countByCategory } from "@/lib/notes";
+import { countByCategory, formatCount } from "@/lib/notes";
 import type { Category } from "@/lib/types";
 import { useKeepnote } from "../KeepnoteProvider";
 import { Button } from "../ui/Button";
@@ -244,7 +244,7 @@ export function CategoriesScreen() {
                   }}
                   style={drag ? { transform: `translateY(${offset}px)` } : undefined}
                   className={`relative rounded-2xl bg-fog-soft px-4 py-3 ${
-                    dragged ? "z-10 opacity-90" : drag ? "transition-transform duration-150" : ""
+                    dragged ? "z-10 shadow-[0_10px_24px_rgba(31,41,55,0.2)]" : drag ? "transition-transform duration-150" : ""
                   }`}
                 >
                   {editing ? (
@@ -302,7 +302,7 @@ export function CategoriesScreen() {
                           {category.name}
                         </p>
                         <p className="shrink-0 text-sm text-slate-deep">
-                          {countByCategory(notes, category.id)}개
+                          {formatCount(countByCategory(notes, category.id))}개
                         </p>
                       </div>
                       <button

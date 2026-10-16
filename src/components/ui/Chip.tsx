@@ -1,9 +1,11 @@
-import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   selected?: boolean;
-  /** 킵박스 고유 색. 선택하지 않았을 때만 적용하고, 선택하면 기본 선택색으로 바뀐다. */
+  /** 킵박스 고유 색 */
   tone?: { background: string; text: string };
+  /** 선택하지 않은 칩을 킵박스 색 대신 회색 라인으로 보여준다. 선택하면 킵박스 색이 나온다. */
+  outline?: boolean;
   children: ReactNode;
 }
 
@@ -16,6 +18,7 @@ const CHIP_IDLE = "border border-mist bg-white text-graphite";
 export function Chip({
   selected = false,
   tone,
+  outline = false,
   className = "",
   type = "button",
   children,
@@ -26,9 +29,19 @@ export function Chip({
       type={type}
       aria-pressed={selected}
       className={`${CHIP_BASE} transition-opacity disabled:opacity-40 ${
-        selected ? CHIP_SELECTED : tone ? "border border-transparent" : CHIP_IDLE
+        selected
+          ? tone
+            ? "border border-transparent"
+            : CHIP_SELECTED
+          : tone && !outline
+            ? "border border-transparent"
+            : CHIP_IDLE
       } ${className}`}
-      style={!selected && tone ? { backgroundColor: tone.background, color: tone.text } : undefined}
+      style={
+        tone && (selected || !outline)
+          ? { backgroundColor: tone.background, color: tone.text }
+          : undefined
+      }
       {...props}
     >
       {children}
@@ -37,9 +50,19 @@ export function Chip({
 }
 
 /** 선택 UI와 같은 크기·스타일의 읽기 전용 칩 (상세 화면의 지정된 킵박스 표시) */
-export function StaticChip({ children }: { children: ReactNode }) {
+export function StaticChip({
+  children,
+  tone,
+}: {
+  children: ReactNode;
+  /** 킵박스 고유 색 */
+  tone?: { background: string; text: string };
+}) {
   return (
-    <span className={`${CHIP_BASE} border border-transparent bg-fog text-graphite`}>
+    <span
+      style={tone ? { backgroundColor: tone.background, color: tone.text } : undefined}
+      className={`${CHIP_BASE} border border-transparent ${tone ? "" : "bg-fog text-graphite"}`}
+    >
       {children}
     </span>
   );
@@ -49,15 +72,12 @@ export function StaticChip({ children }: { children: ReactNode }) {
 export function Tag({
   children,
   className = "bg-fog",
-  style,
 }: {
   children: ReactNode;
   className?: string;
-  style?: CSSProperties;
 }) {
   return (
     <span
-      style={style}
       className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs text-graphite ${className}`}
     >
       {children}

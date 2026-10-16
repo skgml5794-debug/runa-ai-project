@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { uid } from "@/lib/async";
 import { categoryColor } from "@/lib/category-colors";
@@ -272,6 +272,7 @@ export function SummaryEditor({
       <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 pb-8 pt-2">
         <div className="space-y-5">
           <Thumbnail
+            source={initial.source}
             src={initial.thumbnailUrl}
             href={initial.url}
             showArrow={initial.source === "Threads"}
@@ -298,17 +299,7 @@ export function SummaryEditor({
         </div>
 
         <section className="space-y-3">
-          {firstSummary ? (
-            <div className="flex items-center justify-between gap-3">
-              <SectionTitle>핵심 요약</SectionTitle>
-              <p className="flex items-center gap-1.5 text-xs text-slate-deep">
-                <Info className="size-3.5 shrink-0" aria-hidden />
-                {MESSAGES.summaryEditHint}
-              </p>
-            </div>
-          ) : (
-            <SectionTitle>핵심 요약</SectionTitle>
-          )}
+          <SectionTitle>AI 요약</SectionTitle>
           <ul className="space-y-2">
             {lines.map((line, index) => (
               <li key={index}>
@@ -377,6 +368,7 @@ export function SummaryEditor({
                 <Chip
                   key={category.id}
                   tone={categoryColor(index)}
+                  outline
                   selected={selected}
                   disabled={!selected && atNoteMax}
                   onClick={() => toggleCategory(category.id)}
@@ -439,6 +431,17 @@ export function SummaryEditor({
             <p className="text-xs text-slate">{limitMessage}</p>
           ) : null}
         </section>
+
+        {firstSummary ? (
+          <ul className="space-y-1 border-t border-[#e9edf2] pt-5 text-sm text-slate-deep">
+            {MESSAGES.summaryNotices.map((notice) => (
+              <li key={notice} className="flex gap-2">
+                <span aria-hidden className="mt-[0.7em] size-[3px] shrink-0 rounded-full bg-slate" />
+                {notice}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       <footer className="shrink-0 bg-white px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">

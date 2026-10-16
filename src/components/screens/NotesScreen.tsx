@@ -10,6 +10,7 @@ import {
   countByCategory,
   countUncategorized,
   filterAndSortNotes,
+  formatCount,
   matchesQuery,
   type SortOrder,
 } from "@/lib/notes";
@@ -118,6 +119,8 @@ export function NotesScreen() {
     else emptyMessage = MESSAGES.emptyNotes;
   }
 
+  // 킵박스 칩 하나가 선택되면 나머지 킵박스 칩은 라인 형태로 바뀐다. (전체는 그대로)
+  const filterActive = activeCategory !== null || uncategorizedActive;
   const SortIcon = sort === "newest" ? ArrowDownWideNarrow : ArrowUpNarrowWide;
 
   return (
@@ -178,10 +181,11 @@ export function NotesScreen() {
               <Chip
                 key={category.id}
                 tone={categoryColor(index)}
+                outline={filterActive}
                 selected={activeCategory?.id === category.id}
                 onClick={() => updateParams({ category: category.id })}
               >
-                {category.name} {countByCategory(matchedNotes, category.id)}
+                {category.name} {formatCount(countByCategory(matchedNotes, category.id))}
               </Chip>
             ))}
             {countUncategorized(notes) > 0 ? (
@@ -189,7 +193,7 @@ export function NotesScreen() {
                 selected={uncategorizedActive}
                 onClick={() => updateParams({ category: UNCATEGORIZED_ID })}
               >
-                미분류 {countUncategorized(matchedNotes)}
+                미분류 {formatCount(countUncategorized(matchedNotes))}
               </Chip>
             ) : null}
           </div>

@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useState } from "react";
 import { MESSAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/notes";
 import { SESSION_KEYS, getSession } from "@/lib/session";
+import { categoryColor } from "@/lib/category-colors";
 import { useKeepnote } from "../KeepnoteProvider";
 import {
   KeyInfoPanel,
@@ -81,13 +82,14 @@ export function NoteDetailScreen() {
       </header>
 
       <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 pb-8 pt-2">
-        <div className="space-y-5">
+        <div className="mb-[88px] space-y-4">
           <Thumbnail
+            source={note.source}
             src={note.thumbnailUrl}
             href={note.url}
             showArrow={note.source === "Threads"}
           />
-          <div className="space-y-2">
+          <div className="space-y-1">
             <h1 className="break-words text-center text-[26px] font-bold leading-snug tracking-[-0.01em]">
               {note.title}
             </h1>
@@ -100,8 +102,8 @@ export function NoteDetailScreen() {
         </div>
 
         {note.summaryLines.length > 0 ? (
-          <section className="space-y-3">
-            <SectionTitle star>핵심 요약</SectionTitle>
+          <section className="space-y-2">
+            <SectionTitle star>AI 요약</SectionTitle>
             <SummaryBullets lines={note.summaryLines} />
           </section>
         ) : null}
@@ -113,7 +115,9 @@ export function NoteDetailScreen() {
             <SectionTitle star>킵박스</SectionTitle>
             <div className="flex flex-wrap gap-2">
               {noteCategories.map((category) => (
-                <StaticChip key={category.id}>{category.name}</StaticChip>
+                <StaticChip key={category.id} tone={categoryColor(categories.indexOf(category))}>
+                  {category.name}
+                </StaticChip>
               ))}
             </div>
           </section>
