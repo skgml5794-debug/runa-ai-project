@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, createContext, useContext, useState, type ReactNode } from "react";
+import { Analytics } from "./Analytics";
 import { BottomNav } from "./BottomNav";
 import { KeepnoteProvider } from "./KeepnoteProvider";
 import { ToastProvider } from "./ui/Toast";
@@ -30,6 +31,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
             <ToastProvider>
               <main className="flex min-h-0 flex-1 flex-col">{children}</main>
               <Suspense fallback={null}>
+                <Analytics />
                 <BottomNav />
               </Suspense>
             </ToastProvider>

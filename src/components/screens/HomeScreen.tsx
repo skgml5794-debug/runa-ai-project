@@ -3,6 +3,7 @@
 import { ArrowRight, Coffee, CookingPot, Lightbulb, MapPin, ThumbsUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { linkType, track } from "@/lib/analytics";
 import { categoryColor } from "@/lib/category-colors";
 import { MESSAGES } from "@/lib/constants";
 import { parseLink } from "@/lib/link";
@@ -26,6 +27,8 @@ export function HomeScreen() {
   // 안내 팝업 문구. null이면 닫힘.
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const submitting = useRef(false);
+  // 붙여넣기로 입력했는지 (입력창 onPaste)
+  const pasted = useRef(false);
 
   const canSubmit = link.trim() !== "";
 
@@ -36,7 +39,17 @@ export function HomeScreen() {
       return;
     }
     const parsed = parseLink(link);
+    track("link_submit_started", {
+      link_type: linkType(parsed?.source),
+      input_method: pasted.current ? "paste" : "type",
+      category_selected_on_submit: "none",
+    });
     if (!parsed) {
+      track("link_submission_failed", {
+        link_type: "unknown",
+        error_code: "invalid_url",
+        error_message_shown: "fetchError",
+      });
       setAlertMessage(MESSAGES.fetchError);
       return;
     }
@@ -75,9 +88,12 @@ export function HomeScreen() {
               autoCorrect="off"
               spellCheck={false}
               value={link}
-              onChange={(event) =>
-                setSession(SESSION_KEYS.homeLink, event.target.value)
-              }
+              onPaste={() => {
+                pasted.current = true;
+              }}
+              onChange={(event) => {
+                setSession(SESSION_KEYS.homeLink, event.target.value);
+              }}
               placeholder="인스타그램 또는 스레드 링크를 붙여넣어 주세요"
               className="min-h-14 min-w-0 flex-1 text-ellipsis rounded-2xl border border-[#e3e7ed] bg-white px-4 text-base outline-none placeholder:text-[15px] focus:border-slate"
             />

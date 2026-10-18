@@ -7,9 +7,12 @@ import { Tag } from "../ui/Chip";
 export function NoteCard({
   note,
   categories,
+  onOpen,
 }: {
   note: Note;
   categories: readonly Category[];
+  /** 카드를 눌러 상세로 이동할 때 호출 (검색 결과 추적용) */
+  onOpen?: () => void;
 }) {
   const tags = note.categoryIds
     .map((id) => categories.find((category) => category.id === id))
@@ -18,6 +21,7 @@ export function NoteCard({
   return (
     <Link
       href={`/notes/${note.id}`}
+      onClick={onOpen}
       className="block rounded-2xl bg-fog px-8 pb-5 pt-6 transition-colors hover:bg-fog-hover"
     >
       <h2 className="truncate text-base font-bold text-midnight-ink">

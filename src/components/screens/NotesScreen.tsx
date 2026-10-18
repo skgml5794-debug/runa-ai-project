@@ -3,6 +3,7 @@
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { categoryProp, track } from "@/lib/analytics";
 import { categoryColor } from "@/lib/category-colors";
 import { MESSAGES } from "@/lib/constants";
 import {
@@ -75,8 +76,17 @@ export function NotesScreen() {
     }
   }, [ready, categoryParam, activeCategory, uncategorizedActive, router]);
 
-  const applySearch = () =>
+  const applySearch = () => {
+    // 검색어를 입력하고 Enter를 눌렀을 때만 기록한다. (검색어를 지우는 경우는 제외)
+    if (text.trim() !== "") {
+      track("search_performed", {
+        query: text.trim(),
+        search_mode: activeCategory || uncategorizedActive ? "category_filter" : "keyword_only",
+        results_limit: PAGE_SIZE,
+      });
+    }
     updateParams({ q: text.trim() === "" ? null : text });
+  };
 
   const visibleNotes = ready
     ? filterAndSortNotes(notes, {
@@ -183,7 +193,15 @@ export function NotesScreen() {
                 tone={categoryColor(index)}
                 outline={filterActive}
                 selected={activeCategory?.id === category.id}
-                onClick={() => updateParams({ category: category.id })}
+                onClick={() => {
+                  track("category_selected", {
+                    category_id: category.id,
+                    selection_context: "filter_category",
+                    previous_category_id:
+                      activeCategory?.id ?? (uncategorizedActive ? UNCATEGORIZED_ID : "none"),
+                  });
+                  updateParams({ category: category.id });
+                }}
               >
                 {category.name} {formatCount(countByCategory(matchedNotes, category.id))}
               </Chip>
@@ -191,7 +209,14 @@ export function NotesScreen() {
             {countUncategorized(notes) > 0 ? (
               <Chip
                 selected={uncategorizedActive}
-                onClick={() => updateParams({ category: UNCATEGORIZED_ID })}
+                onClick={() => {
+                  track("category_selected", {
+                    category_id: UNCATEGORIZED_ID,
+                    selection_context: "filter_category",
+                    previous_category_id: activeCategory?.id ?? "none",
+                  });
+                  updateParams({ category: UNCATEGORIZED_ID });
+                }}
               >
                 미분류 {formatCount(countUncategorized(matchedNotes))}
               </Chip>
@@ -207,9 +232,22 @@ export function NotesScreen() {
           </p>
         ) : (
           <ul className="space-y-3">
-            {shownNotes.map((note) => (
+            {shownNotes.map((note, index) => (
               <li key={note.id}>
-                <NoteCard note={note} categories={categories} />
+                <NoteCard
+                  note={note}
+                  categories={categories}
+                  onOpen={
+                    query.trim() === ""
+                      ? undefined
+                      : () =>
+                          track("search_result_opened", {
+                            saved_item_id: note.id,
+                            rank_position: index + 1,
+                            category_id: categoryProp(note.categoryIds),
+                          })
+                  }
+                />
               </li>
             ))}
           </ul>

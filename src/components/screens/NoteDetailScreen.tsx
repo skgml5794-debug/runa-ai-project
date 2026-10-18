@@ -3,6 +3,7 @@
 import { ChevronLeft, Ellipsis } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useState } from "react";
+import { categoryProp, contentType, track } from "@/lib/analytics";
 import { MESSAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/notes";
 import { SESSION_KEYS, getSession } from "@/lib/session";
@@ -37,6 +38,19 @@ export function NoteDetailScreen() {
   useEffect(() => {
     if (ready && !note && !deleting) router.replace(notesListHref());
   }, [ready, note, deleting, router]);
+
+  // 킵노트 상세를 열었을 때 한 번만 기록한다. (킵노트가 바뀔 때만 다시)
+  const openedId = note?.id;
+  useEffect(() => {
+    if (!note) return;
+    track("saved_item_opened", {
+      saved_item_id: note.id,
+      content_type: contentType(note.url, note.source),
+      category_id: categoryProp(note.categoryIds),
+    });
+    // note 객체가 아니라 id가 바뀔 때만 실행한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openedId]);
 
   // 다른 화면으로 이동해 이 화면이 숨겨질 때 메뉴를 닫는다.
   useLayoutEffect(() => {

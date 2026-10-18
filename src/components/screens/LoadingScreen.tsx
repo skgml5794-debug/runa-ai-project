@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { linkType, track } from "@/lib/analytics";
 import { withTimeout } from "@/lib/async";
 import { MESSAGES, SUMMARY_TIMEOUT_MS } from "@/lib/constants";
 import {
@@ -10,6 +11,7 @@ import {
   setSession,
   writeDraft,
 } from "@/lib/session";
+import { parseLink } from "@/lib/link";
 import { summarizer } from "@/lib/summarizer";
 import { SummarizeError } from "@/lib/summarizer/claude";
 import { AlertDialog } from "../ui/Dialog";
@@ -32,13 +34,23 @@ export function LoadingScreen() {
       .then((result) => {
         if (cancelled) return;
         setSession(SESSION_KEYS.pendingUrl, "");
+        track("link_submission_succeeded", {
+          link_type: linkType(result.source),
+          validation_status: "success",
+        });
         writeDraft({ result, showToast: true });
         router.replace("/summary");
       })
       .catch((error: unknown) => {
         if (cancelled) return;
         setSession(SESSION_KEYS.pendingUrl, "");
-        setFailure(error instanceof SummarizeError ? error.kind : "failed");
+        const kind = error instanceof SummarizeError ? error.kind : "failed";
+        track("link_submission_failed", {
+          link_type: linkType(parseLink(url)?.source),
+          error_code: kind === "insufficient" ? "insufficient_content" : "fetch_failed",
+          error_message_shown: kind === "insufficient" ? "insufficientContent" : "fetchError",
+        });
+        setFailure(kind);
       });
 
     return () => {

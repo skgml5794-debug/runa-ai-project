@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { categoryProp, contentType, track } from "@/lib/analytics";
 import { remapCategoryIds } from "@/lib/categories";
 import { MESSAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/notes";
@@ -62,12 +63,32 @@ export function SummaryScreen() {
       }}
       onSave={async (values, pending) => {
         const created = await addCategories(pending.map((item) => item.name));
+        const categoryIds = remapCategoryIds(values.categoryIds, pending, created);
         await addNote({
           ...result,
           title: values.title,
           summaryLines: values.summaryLines,
           keyInfo: values.keyInfo,
-          categoryIds: remapCategoryIds(values.categoryIds, pending, created),
+          categoryIds,
+        });
+        created.forEach((category) =>
+          track("category_created", {
+            category_id: category.id,
+            category_name_length: category.name.length,
+            from_flow: "on_submit",
+          }),
+        );
+        categoryIds.forEach((id) =>
+          track("category_selected", {
+            category_id: id,
+            selection_context: "on_submit",
+            previous_category_id: "none",
+          }),
+        );
+        track("save_confirmed", {
+          save_method: "standard",
+          category_id: categoryProp(categoryIds),
+          content_type: contentType(result.url, result.source),
         });
         leaving.current = true;
         clearDraftSession();

@@ -11,6 +11,7 @@ import {
   MAX_CATEGORIES,
   MESSAGES,
 } from "@/lib/constants";
+import { track } from "@/lib/analytics";
 import { countByCategory, formatCount } from "@/lib/notes";
 import type { Category } from "@/lib/types";
 import { useKeepnote } from "../KeepnoteProvider";
@@ -150,7 +151,14 @@ export function CategoriesScreen() {
       return;
     }
     if (addError || atMax) return;
-    await addCategories([newName]);
+    const [created] = await addCategories([newName]);
+    if (created) {
+      track("category_created", {
+        category_id: created.id,
+        category_name_length: created.name.length,
+        from_flow: "from_categories_page",
+      });
+    }
     setNewName("");
   };
 

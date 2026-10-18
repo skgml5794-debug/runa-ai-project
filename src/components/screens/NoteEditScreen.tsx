@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { track } from "@/lib/analytics";
 import { remapCategoryIds } from "@/lib/categories";
 import { formatDate } from "@/lib/notes";
 import { useKeepnote } from "../KeepnoteProvider";
@@ -43,12 +44,30 @@ export function NoteEditScreen() {
       }}
       onSave={async (values, pending) => {
         const created = await addCategories(pending.map((item) => item.name));
+        const categoryIds = remapCategoryIds(values.categoryIds, pending, created);
         await updateNote(note.id, {
           title: values.title,
           summaryLines: values.summaryLines,
           keyInfo: values.keyInfo,
-          categoryIds: remapCategoryIds(values.categoryIds, pending, created),
+          categoryIds,
         });
+        created.forEach((category) =>
+          track("category_created", {
+            category_id: category.id,
+            category_name_length: category.name.length,
+            from_flow: "from_item_detail",
+          }),
+        );
+        // 이번 수정에서 새로 선택된 킵박스만 기록한다.
+        categoryIds
+          .filter((id) => !note.categoryIds.includes(id))
+          .forEach((id) =>
+            track("category_selected", {
+              category_id: id,
+              selection_context: "edit_item",
+              previous_category_id: "none",
+            }),
+          );
         backToDetail();
       }}
       onClose={backToDetail}
