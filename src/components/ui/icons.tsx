@@ -1,7 +1,7 @@
 import { useId, type ReactNode, type SVGProps } from "react";
 
 /**
- * 하단 메뉴와 킵박스 화면이 함께 쓰는 솔리드 아이콘 세트.
+ * 하단 메뉴와 카테고리 화면이 함께 쓰는 솔리드 아이콘 세트.
  * 모서리를 둥글린 면 위에 안쪽 라인·세부 요소는 배경이 비치도록 파낸다.
  * 파낸 라인의 두께는 모든 아이콘에서 2로 같다.
  */
@@ -126,6 +126,42 @@ export function TrashIcon(props: SVGProps<SVGSVGElement>) {
         </>
       }
     />
+  );
+}
+
+/**
+ * 체크·세모·엑스: 하단 메뉴·카테고리 아이콘의 라인(두께 2)과 같은 굵기·둥근 끝으로 그린 라인 아이콘.
+ * 크기 24px에서 선이 3px로 보이게(하단 메뉴 라인 2px보다 조금 굵게) 선 굵기를 3으로 둔다. 셋이 한 세트로 보이도록 크기와 굵기가 같다.
+ */
+const LINE_PROPS = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 3,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
+
+export function CheckIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...LINE_PROPS} {...props}>
+      <path d="M5.5 12.5 10 17l8.5-9.5" />
+    </svg>
+  );
+}
+
+export function TriangleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...LINE_PROPS} {...props}>
+      <path d="M12 7 18.2 17.5H5.8L12 7Z" />
+    </svg>
+  );
+}
+
+export function CrossIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...LINE_PROPS} {...props}>
+      <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />
+    </svg>
   );
 }
 

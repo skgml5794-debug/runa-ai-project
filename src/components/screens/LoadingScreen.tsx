@@ -59,7 +59,7 @@ export function LoadingScreen() {
   }, [router]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center bg-linear-to-b from-lavender-field/50 to-white px-6 pb-32 text-center">
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center bg-linear-to-b from-lavender-field/50 to-white px-5 pb-32 text-center">
       <Sparkle className="size-[51px]" />
       <p role="status" className="mt-4 text-base font-semibold tracking-[-0.4px] text-ultra-violet">
         {MESSAGES.loading}

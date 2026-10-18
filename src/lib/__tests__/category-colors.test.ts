@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CATEGORY_COLORS, categoryColor } from "../category-colors";
 
-describe("킵박스 색상", () => {
+describe("카테고리 색상", () => {
   it("순서대로 쓰고 다 쓰면 처음부터 반복한다", () => {
     expect(CATEGORY_COLORS).toHaveLength(5);
     for (let i = 0; i < 20; i += 1) {

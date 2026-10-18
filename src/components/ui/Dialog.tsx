@@ -51,7 +51,7 @@ function DialogShell({ message, onEscape, children }: DialogShellProps) {
 
   if (!frame) return null;
   return createPortal(
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-midnight-ink/40 px-6">
+    <div className="fixed inset-0 z-50 flex min-[431px]:absolute items-center justify-center bg-midnight-ink/40 px-6">
       <div
         ref={panel}
         role="alertdialog"

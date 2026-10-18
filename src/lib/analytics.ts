@@ -83,7 +83,7 @@ export function contentType(url: string, source: Source): string {
   return "unknown";
 }
 
-/** 킵박스 id 목록을 문자열 하나로. 없으면 'uncategorized' */
+/** 카테고리 id 목록을 문자열 하나로. 없으면 'uncategorized' */
 export function categoryProp(ids: readonly string[]): string {
   return ids.length > 0 ? ids.join(",") : "uncategorized";
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowDownWideNarrow, ArrowUpNarrowWide, Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { HomeLogoLink } from "../ui/Logo";
 import { categoryProp, track } from "@/lib/analytics";
 import { categoryColor } from "@/lib/category-colors";
 import { MESSAGES } from "@/lib/constants";
@@ -21,8 +22,8 @@ import { NoteCard } from "../note/NoteCard";
 import { Chip } from "../ui/Chip";
 
 /**
- * 킵노트 화면. 검색어·정렬·선택한 킵박스는 URL 쿼리에 보관해
- * 상세에서 돌아오거나 킵박스 관리 화면에서 돌아와도 유지된다.
+ * 킵노트 화면. 검색어·정렬·선택한 카테고리는 URL 쿼리에 보관해
+ * 상세에서 돌아오거나 카테고리 관리 화면에서 돌아와도 유지된다.
  */
 const PAGE_SIZE = 15;
 
@@ -59,12 +60,53 @@ export function NotesScreen() {
     });
   };
 
+  // 모바일은 문서가 스크롤되므로, 상세에서 브라우저 뒤로가기로 돌아오면 보던 위치로 되돌린다.
+  // (숨겨진 화면은 상태를 보존하므로 ref 값이 남고, 다시 보일 때 이 효과가 한 번 더 실행된다.)
+  const savedScroll = useRef<number | null>(null);
+  const shownBefore = useRef(false);
+  useEffect(() => {
+    if (shownBefore.current && savedScroll.current !== null) {
+      const top = savedScroll.current;
+      // 이동 직후 화면이 맨 위로 올라가는 동작이 끝난 뒤에 복원한다.
+      const timer = window.setTimeout(() => window.scrollTo(0, top), 50);
+      return () => window.clearTimeout(timer);
+    }
+    shownBefore.current = true;
+  }, []);
+
+  // 아래로 스크롤하면 상단(로고·검색)을 접고, 위로 스크롤하면 다시 보여준다.
+  const collapseRef = useRef<HTMLDivElement>(null);
+  const [collapseHeight, setCollapseHeight] = useState(0);
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    const element = collapseRef.current;
+    if (!element) return;
+    const measure = () => setCollapseHeight(element.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const delta = y - lastY;
+      if (y <= 8) setCollapsed(false);
+      else if (delta > 6) setCollapsed(true);
+      else if (delta < -6) setCollapsed(false);
+      if (Math.abs(delta) > 6) lastY = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
   // 마지막 목록 상태를 기억해 상세의 `목록으로`에서 복원한다.
   useEffect(() => {
     setSession(SESSION_KEYS.notesQuery, searchParams.toString());
   }, [searchParams]);
 
-  // 삭제되어 없는 킵박스가 선택된 상태면 `전체`로 되돌린다.
+  // 삭제되어 없는 카테고리가 선택된 상태면 `전체`로 되돌린다.
   useEffect(() => {
     if (ready && categoryParam && !activeCategory && !uncategorizedActive) {
       const next = new URLSearchParams(window.location.search);
@@ -96,14 +138,13 @@ export function NotesScreen() {
       })
     : [];
 
-  // 한 번에 15개씩 보여주고, 아래로 스크롤하면 15개를 더 불러온다. 검색·정렬·킵박스가 바뀌면 처음부터.
+  // 한 번에 15개씩 보여주고, 아래로 스크롤하면 15개를 더 불러온다. 검색·정렬·카테고리가 바뀌면 처음부터.
   const filterKey = `${query}|${sort}|${categoryParam ?? ""}`;
   const [paging, setPaging] = useState({ key: filterKey, limit: PAGE_SIZE });
   if (paging.key !== filterKey) setPaging({ key: filterKey, limit: PAGE_SIZE });
   const limit = paging.key === filterKey ? paging.limit : PAGE_SIZE;
   const shownNotes = visibleNotes.slice(0, limit);
   const hasMore = visibleNotes.length > limit;
-  const scrollRoot = useRef<HTMLDivElement>(null);
   const sentinel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -115,7 +156,7 @@ export function NotesScreen() {
           setPaging({ key: filterKey, limit: limit + PAGE_SIZE });
         }
       },
-      { root: scrollRoot.current, rootMargin: "120px" },
+      { rootMargin: "120px" },
     );
     observer.observe(target);
     return () => observer.disconnect();
@@ -129,16 +170,17 @@ export function NotesScreen() {
     else emptyMessage = MESSAGES.emptyNotes;
   }
 
-  // 킵박스 칩 하나가 선택되면 나머지 킵박스 칩은 라인 형태로 바뀐다. (전체는 그대로)
-  const filterActive = activeCategory !== null || uncategorizedActive;
-  const SortIcon = sort === "newest" ? ArrowDownWideNarrow : ArrowUpNarrowWide;
+  // 카테고리 칩은 선택된 것만 고유 색, 나머지는 연한 회색 라인으로 보여준다. (전체를 골라도 동일)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="shrink-0 space-y-4 bg-white px-6 pb-3 pt-10">
-        <p className="text-base text-slate-deep">
-          필요한 정보만 모아두고, 언제든 다시 찾아보세요
-        </p>
+      <div
+        className="sticky z-10 shrink-0 bg-white px-5 pb-3 transition-[top] duration-200"
+        // 아래로 스크롤하면 로고·검색 영역이 위로 접히고 카테고리만 남는다. (모바일 문서 스크롤 기준)
+        style={{ top: collapsed ? -Math.max(collapseHeight - 8, 0) : 0 }}
+      >
+        <div ref={collapseRef} className="space-y-3 pb-3.5 pt-6">
+        <HomeLogoLink />
         <div className="flex items-center gap-2">
           <label className="flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-2xl border border-[#e3e7ed] bg-white px-4">
             <Search className="size-5 shrink-0 text-placeholder" aria-hidden />
@@ -161,27 +203,30 @@ export function NotesScreen() {
               }}
               className="min-w-0 flex-1 bg-transparent text-base outline-none [&::-webkit-search-cancel-button]:hidden"
             />
+            {text !== "" ? (
+              <button
+                type="button"
+                aria-label="검색어 지우기"
+                // 입력창의 포커스를 잃지 않게 한다.
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setText("");
+                  updateParams({ q: null });
+                }}
+                className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#c9cfd9] text-white"
+              >
+                <X className="size-3" strokeWidth={3} aria-hidden />
+              </button>
+            ) : null}
           </label>
-          <button
-            type="button"
-            aria-label={
-              sort === "newest"
-                ? "최신순 정렬 (눌러서 과거순으로 변경)"
-                : "과거순 정렬 (눌러서 최신순으로 변경)"
-            }
-            onClick={() =>
-              updateParams({ sort: sort === "newest" ? "oldest" : null })
-            }
-            className="flex size-14 shrink-0 items-center justify-center rounded-2xl text-placeholder"
-          >
-            <SortIcon className="size-6" aria-hidden />
-          </button>
         </div>
 
-        <section aria-label="킵박스" className="space-y-1">
-          <div aria-hidden className="h-2.5" />
-          <div className="no-scrollbar -mx-6 flex gap-2 overflow-x-auto px-6">
+        </div>
+
+        <section aria-label="카테고리">
+          <div className="no-scrollbar -mx-5 flex gap-1.5 overflow-x-auto px-5">
             <Chip
+              compact
               selected={activeCategory === null && !uncategorizedActive}
               onClick={() => updateParams({ category: null })}
             >
@@ -189,9 +234,10 @@ export function NotesScreen() {
             </Chip>
             {categories.map((category, index) => (
               <Chip
+                compact
                 key={category.id}
                 tone={categoryColor(index)}
-                outline={filterActive}
+                outline
                 selected={activeCategory?.id === category.id}
                 onClick={() => {
                   track("category_selected", {
@@ -208,6 +254,7 @@ export function NotesScreen() {
             ))}
             {countUncategorized(notes) > 0 ? (
               <Chip
+                compact
                 selected={uncategorizedActive}
                 onClick={() => {
                   track("category_selected", {
@@ -225,18 +272,22 @@ export function NotesScreen() {
         </section>
       </div>
 
-      <div ref={scrollRoot} className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-1">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-1">
         {emptyMessage ? (
           <p className="px-2 pt-12 text-center text-sm leading-6 text-slate-deep">
             {emptyMessage}
           </p>
         ) : (
-          <ul className="space-y-3">
+          <ul
+            className="space-y-2"
+            onClickCapture={() => {
+              savedScroll.current = window.scrollY;
+            }}
+          >
             {shownNotes.map((note, index) => (
               <li key={note.id}>
                 <NoteCard
                   note={note}
-                  categories={categories}
                   onOpen={
                     query.trim() === ""
                       ? undefined

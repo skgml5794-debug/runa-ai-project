@@ -1,27 +1,42 @@
 "use client";
 
-import { ArrowRight, Coffee, CookingPot, Lightbulb, MapPin, ThumbsUp } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { linkType, track } from "@/lib/analytics";
-import { categoryColor } from "@/lib/category-colors";
 import { MESSAGES } from "@/lib/constants";
 import { parseLink } from "@/lib/link";
+import { launchApp } from "@/lib/open-app";
+import { useOnboarded } from "@/lib/onboarding";
 import { SESSION_KEYS, setSession, useSessionValue } from "@/lib/session";
-import { Logo } from "../ui/Logo";
+import { HomeLogoLink } from "../ui/Logo";
 import { Sparkle } from "../ui/Sparkle";
 import { AlertDialog } from "../ui/Dialog";
 
-const TOPICS = [
-  { label: "추천 제품", Icon: ThumbsUp },
-  { label: "레시피", Icon: CookingPot },
-  { label: "데이트·피크닉 코스", Icon: MapPin },
-  { label: "생활·업무 노하우", Icon: Lightbulb },
-  { label: "맛집·카페", Icon: Coffee },
+const SERVICES = [
+  {
+    label: "Instagram",
+    web: "https://www.instagram.com",
+    app: {
+      androidIntent: "intent://www.instagram.com/#Intent;scheme=https;package=com.instagram.android;end",
+      iosApp: "instagram://app",
+      iosFallback: "https://apps.apple.com/app/instagram/id389801252",
+    },
+  },
+  {
+    label: "Threads",
+    web: "https://www.threads.com",
+    app: {
+      androidIntent: "intent://www.threads.com/#Intent;scheme=https;package=com.instagram.barcelona;end",
+      iosApp: "barcelona://",
+      iosFallback: "https://apps.apple.com/app/threads/id6446901002",
+    },
+  },
 ] as const;
 
 export function HomeScreen() {
   const router = useRouter();
+  const onboarded = useOnboarded();
   // 오류가 나거나 로딩 중 뒤로 돌아와도 입력한 링크를 유지한다.
   const link = useSessionValue(SESSION_KEYS.homeLink);
   // 안내 팝업 문구. null이면 닫힘.
@@ -29,6 +44,11 @@ export function HomeScreen() {
   const submitting = useRef(false);
   // 붙여넣기로 입력했는지 (입력창 onPaste)
   const pasted = useRef(false);
+
+  // 처음 방문이면 홈 대신 온보딩을 먼저 보여준다.
+  useEffect(() => {
+    if (onboarded === false) router.replace("/onboarding");
+  }, [onboarded, router]);
 
   const canSubmit = link.trim() !== "";
 
@@ -58,13 +78,15 @@ export function HomeScreen() {
     router.push("/loading");
   };
 
+  if (!onboarded) return <div className="min-h-0 flex-1 bg-[#f4f6f9]" />;
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#f4f6f9]">
-      <header className="relative z-10 shrink-0 px-6 pt-10">
-        <Logo />
+      <header className="relative z-10 shrink-0 px-5 pt-6">
+        <HomeLogoLink />
       </header>
       <form
-        className="relative z-10 flex flex-1 flex-col justify-center gap-8 px-6 pb-16"
+        className="relative z-10 flex flex-1 flex-col justify-center gap-6 px-5 pb-6"
         onSubmit={(event) => {
           event.preventDefault();
           submit();
@@ -79,7 +101,7 @@ export function HomeScreen() {
             {MESSAGES.homeHeadline}
           </h1>
         </div>
-        <div className="space-y-4">
+        <div>
           <div className="flex gap-2">
             <input
               aria-label="Instagram 또는 Threads 링크"
@@ -105,25 +127,27 @@ export function HomeScreen() {
               <ArrowRight className="size-[18.4px]" aria-hidden />
             </button>
           </div>
-          <ul className="flex flex-wrap justify-center gap-1.5">
-            {TOPICS.map(({ label, Icon }, index) => (
-              <li
-                key={label}
-                className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[13px] font-medium text-midnight-ink shadow-[0_1px_6px_rgba(31,41,55,0.08)]"
-              >
-                <Icon
-                  className="size-4"
-                  fill="currentColor"
-                  strokeWidth={1.5}
-                  style={{ color: categoryColor(index).background }}
-                  aria-hidden
-                />
-                {label}
-              </li>
-            ))}
-          </ul>
         </div>
       </form>
+      <nav aria-label="바로가기" className="relative z-10 grid shrink-0 grid-cols-2 pb-2">
+        {SERVICES.map((service) => (
+          <a
+            key={service.label}
+            href={service.web}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => {
+              // 모바일이면 앱을 먼저 열고, 그 외(데스크톱)는 기본 동작(새 탭)을 따른다.
+              if (launchApp(service.app)) event.preventDefault();
+            }}
+            // 화면 가로를 반으로 나눈 각 칸의 가운데에 (화살표 + 글자)를 둔다.
+            className="flex min-h-11 items-center justify-center gap-1 text-[15px] font-medium leading-none text-slate-deep"
+          >
+            <ArrowUpRight className="size-[18px] shrink-0" aria-hidden />
+            {service.label}
+          </a>
+        ))}
+      </nav>
 
       {alertMessage ? (
         <AlertDialog

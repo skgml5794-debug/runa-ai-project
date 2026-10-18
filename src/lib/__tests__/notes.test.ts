@@ -41,7 +41,7 @@ describe("필터와 정렬", () => {
   const c = makeNote({ id: "c", title: "C 여행", createdAt: "2026-10-02T00:00:00Z", categoryIds: [] });
   const all = [a, b, c];
 
-  it("미분류는 킵박스가 없는 킵노트만 보여주고, 개수를 센다", () => {
+  it("미분류는 카테고리가 없는 킵노트만 보여주고, 개수를 센다", () => {
     expect(filterAndSortNotes(all, { query: "", categoryId: UNCATEGORIZED_ID, sort: "newest" }).map((n) => n.id)).toEqual(["c"]);
     expect(countUncategorized(all)).toBe(1);
     expect(countUncategorized([a, b])).toBe(0);

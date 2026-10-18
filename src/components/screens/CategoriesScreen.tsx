@@ -12,6 +12,7 @@ import {
   MESSAGES,
 } from "@/lib/constants";
 import { track } from "@/lib/analytics";
+import { HomeLogoLink } from "../ui/Logo";
 import { countByCategory, formatCount } from "@/lib/notes";
 import type { Category } from "@/lib/types";
 import { useKeepnote } from "../KeepnoteProvider";
@@ -20,7 +21,7 @@ import { AlertDialog, ConfirmDialog } from "../ui/Dialog";
 import { GripIcon, PencilIcon, TrashIcon } from "../ui/icons";
 
 /** 항목 사이 간격(space-y-3)과 같은 값. 드래그 중 이웃 항목이 밀리는 거리 계산에 쓴다. */
-const ITEM_GAP = 12;
+const ITEM_GAP = 8;
 const EDGE_SCROLL_ZONE = 56;
 
 interface DragState {
@@ -32,7 +33,7 @@ interface DragState {
   shift: number;
 }
 
-/** 킵박스 관리 화면. 하단 메뉴의 킵박스 탭으로 들어온다. */
+/** 카테고리 관리 화면. 하단 메뉴의 카테고리 탭으로 들어온다. */
 export function CategoriesScreen() {
   const {
     notes,
@@ -68,7 +69,7 @@ export function CategoriesScreen() {
     const scroller = scrollRef.current;
     if (!current || !scroller) return;
     current.lastY = clientY;
-    const dy = clientY - current.startY + (scroller.scrollTop - current.startScroll);
+    const dy = clientY - current.startY + (scroller.scrollTop + window.scrollY - current.startScroll);
     const center = current.centers[current.from] + dy;
     const to = current.centers.filter(
       (value, index) => index !== current.from && value < center,
@@ -93,10 +94,12 @@ export function CategoriesScreen() {
       itemRefs.current.get(category.id)?.getBoundingClientRect(),
     );
     if (rects.some((rect) => !rect)) return;
-    const base = scroller.scrollTop;
+    // 데스크톱은 목록 영역이, 모바일은 문서(페이지)가 스크롤되므로 둘을 합쳐서 계산한다.
+    const base = scroller.scrollTop + window.scrollY;
     const centers = rects.map((rect) => rect!.top + base + rect!.height / 2);
     const height = rects[index]!.height;
-    const scrollBox = scroller.getBoundingClientRect();
+    const box = scroller.getBoundingClientRect();
+    const scrollBox = { top: Math.max(box.top, 0), bottom: Math.min(box.bottom, window.innerHeight) };
     const current = {
       from: index,
       startY: event.clientY,
@@ -111,8 +114,16 @@ export function CategoriesScreen() {
     // 가장자리로 끌면 목록이 스크롤된다.
     const tick = () => {
       if (session.current !== current) return;
-      if (current.lastY < scrollBox.top + EDGE_SCROLL_ZONE) scroller.scrollTop -= 8;
-      else if (current.lastY > scrollBox.bottom - EDGE_SCROLL_ZONE) scroller.scrollTop += 8;
+      const step =
+        current.lastY < scrollBox.top + EDGE_SCROLL_ZONE
+          ? -8
+          : current.lastY > scrollBox.bottom - EDGE_SCROLL_ZONE
+            ? 8
+            : 0;
+      if (step !== 0) {
+        if (scroller.scrollHeight > scroller.clientHeight + 1) scroller.scrollTop += step;
+        else window.scrollBy(0, step);
+      }
       moveDrag(current.lastY);
       current.frame = requestAnimationFrame(tick);
     };
@@ -186,20 +197,18 @@ export function CategoriesScreen() {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-10">
-        <p className="text-base text-slate-deep">
-          저장한 노트를 나만의 기준으로 묶어보세요
-        </p>
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-6">
+        <HomeLogoLink />
 
         <form
-          className="mt-4 flex gap-2"
+          className="mt-3 flex gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             void addCategory();
           }}
         >
           <input
-            aria-label="새 킵박스 이름"
+            aria-label="새 카테고리 이름"
             value={newName}
             maxLength={CATEGORY_NAME_MAX}
             disabled={atMax}
@@ -223,7 +232,7 @@ export function CategoriesScreen() {
             {MESSAGES.categoryDuplicate}
           </p>
         ) : null}
-        <p className="mt-3 flex items-center gap-1.5 pl-3 text-xs text-slate-deep">
+        <p className="mt-3 flex items-center gap-1.5 pl-3 text-xs text-[#b4bcc9]">
           <Info className="size-3.5 shrink-0" aria-hidden />
           {MESSAGES.categoryTotalMax}
         </p>
@@ -233,7 +242,7 @@ export function CategoriesScreen() {
             {MESSAGES.emptyCategories}
           </p>
         ) : (
-          <ul className="mt-6 space-y-3">
+          <ul className="mt-6 space-y-2">
             {categories.map((category, index) => {
               const editing = editingId === category.id;
               const dragged = drag?.id === category.id;
@@ -251,7 +260,7 @@ export function CategoriesScreen() {
                     else itemRefs.current.delete(category.id);
                   }}
                   style={drag ? { transform: `translateY(${offset}px)` } : undefined}
-                  className={`relative rounded-2xl bg-fog px-4 py-3 ${
+                  className={`relative rounded-2xl border border-[#e3e7ed] bg-white px-4 py-3 ${
                     dragged ? "z-10 shadow-[0_10px_24px_rgba(31,41,55,0.2)]" : drag ? "transition-transform duration-150" : ""
                   }`}
                 >
@@ -260,7 +269,7 @@ export function CategoriesScreen() {
                       <div className="flex items-center gap-2">
                         <input
                           autoFocus
-                          aria-label="킵박스 이름"
+                          aria-label="카테고리 이름"
                           value={draftName}
                           maxLength={CATEGORY_NAME_MAX}
                           onChange={(event) => setDraftName(event.target.value)}
@@ -304,7 +313,7 @@ export function CategoriesScreen() {
                       ) : null}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center">
                       <div className="flex min-w-0 flex-1 items-baseline gap-3 pr-2">
                         <p className="min-w-0 truncate text-base font-semibold text-midnight-ink">
                           {category.name}
@@ -317,7 +326,7 @@ export function CategoriesScreen() {
                         type="button"
                         aria-label="수정"
                         onClick={() => startRename(category)}
-                        className="flex size-11 items-center justify-center rounded-full text-[#b8c0cc]"
+                        className="flex size-9 items-center justify-center rounded-full text-[#b8c0cc]"
                       >
                         <PencilIcon className="size-5" />
                       </button>
@@ -325,7 +334,7 @@ export function CategoriesScreen() {
                         type="button"
                         aria-label="삭제"
                         onClick={() => setDeleteTarget(category)}
-                        className="flex size-11 items-center justify-center rounded-full text-[#b8c0cc]"
+                        className="flex size-9 items-center justify-center rounded-full text-[#b8c0cc]"
                       >
                         <TrashIcon className="size-5" />
                       </button>
@@ -345,7 +354,7 @@ export function CategoriesScreen() {
                             void moveByKey(index, 1);
                           }
                         }}
-                        className={`flex size-11 touch-none select-none items-center justify-center rounded-full text-[#b8c0cc] ${
+                        className={`flex size-9 touch-none select-none items-center justify-center rounded-full text-[#b8c0cc] ${
                           dragged ? "cursor-grabbing" : "cursor-grab"
                         }`}
                       >

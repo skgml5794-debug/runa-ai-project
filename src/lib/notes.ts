@@ -30,7 +30,7 @@ export function matchesQuery(note: Note, query: string): boolean {
   return searchableText(note).includes(needle);
 }
 
-/** 킵박스를 하나도 지정하지 않은 킵노트를 고르는 목록 필터 값 */
+/** 카테고리를 하나도 지정하지 않은 킵노트를 고르는 목록 필터 값 */
 export const UNCATEGORIZED_ID = "uncategorized";
 
 export function countUncategorized(notes: readonly Note[]): number {
@@ -57,7 +57,7 @@ export function filterAndSortNotes(
   });
 }
 
-/** 킵박스 하나의 저장 수 표기. 99개를 넘으면 99+ */
+/** 카테고리 하나의 저장 수 표기. 99개를 넘으면 99+ */
 export function formatCount(count: number): string {
   return count > 99 ? "99+" : String(count);
 }

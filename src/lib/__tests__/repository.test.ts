@@ -80,7 +80,7 @@ describe("LocalStorageRepository", () => {
     expect((await repo.listCategories())[0].name).toBe("Trip");
   });
 
-  it("킵박스 순서를 바꿔 저장하고, 목록에 없는 킵박스는 뒤에 둔다", async () => {
+  it("카테고리 순서를 바꿔 저장하고, 목록에 없는 카테고리는 뒤에 둔다", async () => {
     const a = await repo.createCategory("A");
     const b = await repo.createCategory("B");
     const c = await repo.createCategory("C");
@@ -90,7 +90,7 @@ describe("LocalStorageRepository", () => {
     expect((await repo.listCategories()).map((x) => x.name)).toEqual(["B", "C", "A"]);
   });
 
-  it("킵박스는 최대 20개까지만 만들 수 있고, 21번째는 저장소에서 거부한다", async () => {
+  it("카테고리는 최대 20개까지만 만들 수 있고, 21번째는 저장소에서 거부한다", async () => {
     for (let i = 1; i <= 20; i += 1) await repo.createCategory(`박스${i}`);
     await expect(repo.createCategory("박스21")).rejects.toThrow(CategoryLimitError);
     expect(await repo.listCategories()).toHaveLength(20);
@@ -99,7 +99,7 @@ describe("LocalStorageRepository", () => {
     await expect(repo.createCategory("박스21")).resolves.toMatchObject({ name: "박스21" });
   });
 
-  it("카테고리를 삭제하면 킵노트는 모두 유지하고 해당 킵박스 분류만 제거한다(미분류로 이동)", async () => {
+  it("카테고리를 삭제하면 킵노트는 모두 유지하고 해당 카테고리 분류만 제거한다(미분류로 이동)", async () => {
     const x = await repo.createCategory("X");
     const y = await repo.createCategory("Y");
     const onlyX = await repo.createNote(input({ title: "onlyX", categoryIds: [x.id] }));

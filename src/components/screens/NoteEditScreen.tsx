@@ -58,7 +58,7 @@ export function NoteEditScreen() {
             from_flow: "from_item_detail",
           }),
         );
-        // 이번 수정에서 새로 선택된 킵박스만 기록한다.
+        // 이번 수정에서 새로 선택된 카테고리만 기록한다.
         categoryIds
           .filter((id) => !note.categoryIds.includes(id))
           .forEach((id) =>

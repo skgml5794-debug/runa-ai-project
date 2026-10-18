@@ -24,7 +24,7 @@ interface KeepnoteContextValue {
   addCategories(names: string[]): Promise<Category[]>;
   renameCategory(id: string, name: string): Promise<void>;
   deleteCategory(id: string): Promise<void>;
-  /** 킵박스 순서를 저장한다. 화면에는 바로 반영한다. */
+  /** 카테고리 순서를 저장한다. 화면에는 바로 반영한다. */
   reorderCategories(ids: string[]): Promise<void>;
 }
 

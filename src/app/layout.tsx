@@ -16,8 +16,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className="h-full antialiased">
-      <body className="h-full">
+    <html lang="ko" className="min-h-full antialiased">
+      <body className="min-h-full">
         <AppFrame>{children}</AppFrame>
       </body>
     </html>

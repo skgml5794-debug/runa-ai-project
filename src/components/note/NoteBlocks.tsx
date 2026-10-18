@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import type { KeyInfoGroup, Source } from "@/lib/types";
+import { isIOS, openPostInApp } from "@/lib/open-app";
 import { InstagramIcon, ThreadsIcon } from "../ui/icons";
 
 /** 정사각형 썸네일. 이미지가 없으면 중립 기본 이미지로 대체한다. */
@@ -24,7 +25,7 @@ export function Thumbnail({
   const showImage = src !== null && src !== failedSrc;
   const SourceIcon = source === "Threads" ? ThreadsIcon : InstagramIcon;
   const box = (
-    <div className="relative mx-auto flex size-36 items-center justify-center overflow-hidden rounded-2xl border border-[#eceff3] bg-fog">
+    <div className="relative mx-auto flex size-36 items-center justify-center overflow-hidden rounded-[1rem] border border-[#eceff3] bg-fog">
       {showImage ? (
         // 원본 썸네일은 임의의 외부 도메인이라 next/image 최적화 대상이 아니다.
         // eslint-disable-next-line @next/next/no-img-element
@@ -33,6 +34,7 @@ export function Thumbnail({
           alt="썸네일"
           className="size-full object-cover"
           draggable={false}
+          referrerPolicy="no-referrer"
           onError={() => setFailedSrc(src)}
         />
       ) : (
@@ -58,7 +60,17 @@ export function Thumbnail({
       target="_blank"
       rel="noopener noreferrer"
       aria-label="원본 링크 열기"
-      className="mx-auto block w-fit rounded-2xl"
+      // 모바일에서는 브라우저가 아니라 앱으로 바로 연다. (앱이 없으면 스토어/브라우저)
+      onClick={(event) => {
+        // iOS의 Threads는 게시물 전용 앱 주소가 공개돼 있지 않아서, 링크를 직접 누른 것처럼 같은 탭에서
+        // 열리게 둔다. (앱이 처리하는 https 주소이고, 앱이 없으면 브라우저로 열린다.)
+        if (isIOS() && source === "Threads") {
+          event.currentTarget.target = "_self";
+          return;
+        }
+        if (openPostInApp(href, source)) event.preventDefault();
+      }}
+      className="mx-auto block w-fit rounded-[1rem]"
     >
       {box}
     </a>
@@ -84,7 +96,7 @@ export function MetaLine({
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="flex items-center gap-1.5 text-lg font-bold text-midnight-ink">
+    <h2 className="flex items-center gap-1.5 text-base font-bold text-midnight-ink">
       {children}
     </h2>
   );
@@ -103,7 +115,7 @@ export function Bullet() {
 export function SummaryBullets({ lines }: { lines: string[] }) {
   if (lines.length === 1) {
     return (
-      <p className="whitespace-pre-line break-words text-base leading-6 text-midnight-ink">
+      <p className="whitespace-pre-line text-pretty break-keep break-words text-[15px] leading-6 text-midnight-ink">
         {lines[0]}
       </p>
     );
@@ -111,9 +123,9 @@ export function SummaryBullets({ lines }: { lines: string[] }) {
   return (
     <ul className="space-y-2">
       {lines.map((line, index) => (
-        <li key={index} className="flex gap-2.5 text-base leading-6 text-midnight-ink">
+        <li key={index} className="flex gap-1.5 text-[15px] leading-6 text-midnight-ink">
           <Bullet />
-          <span className="min-w-0 whitespace-pre-line break-words">{line}</span>
+          <span className="min-w-0 whitespace-pre-line text-pretty break-keep break-words">{line}</span>
         </li>
       ))}
     </ul>
@@ -133,25 +145,25 @@ export function KeyInfoPanel({ groups }: { groups: KeyInfoGroup[] }) {
   const visible = groups.filter((group) => group.items.length > 0);
   if (visible.length === 0) return null;
   return (
-    <section aria-labelledby="key-info-title" className="space-y-3">
+    <section aria-labelledby="key-info-title" className="space-y-2">
       <h2
         id="key-info-title"
-        className="flex items-center gap-1.5 text-lg font-bold text-midnight-ink"
+        className="flex items-center gap-1.5 text-base font-bold text-midnight-ink"
       >
         핵심 정보
       </h2>
       <div className="space-y-4 rounded-2xl bg-fog px-5 pb-7 pt-5">
         {visible.map((group) => (
-          <div key={group.label} className="space-y-2">
+          <div key={group.label} className="space-y-3">
             <KeyInfoLabel>{group.label}</KeyInfoLabel>
-            <ul className="space-y-2 pl-3">
+            <ul className="space-y-2.5">
               {group.items.map((item, index) => (
                 <li
                   key={index}
-                  className="flex gap-2.5 text-base leading-6 text-midnight-ink"
+                  className="flex gap-1.5 text-[15px] leading-6 text-midnight-ink"
                 >
                   <Bullet />
-                  <span className="min-w-0 whitespace-pre-line break-words">{item}</span>
+                  <span className="min-w-0 whitespace-pre-line text-pretty break-keep break-words">{item}</span>
                 </li>
               ))}
             </ul>

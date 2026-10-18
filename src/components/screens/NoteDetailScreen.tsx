@@ -19,7 +19,7 @@ import {
 import { StaticChip } from "../ui/Chip";
 import { ConfirmDialog } from "../ui/Dialog";
 
-/** 마지막으로 본 킵노트 목록 상태(검색·정렬·킵박스)를 포함한 주소 */
+/** 마지막으로 본 킵노트 목록 상태(검색·정렬·카테고리)를 포함한 주소 */
 function notesListHref(): string {
   const query = getSession(SESSION_KEYS.notesQuery);
   return query ? `/notes?${query}` : "/notes";
@@ -74,7 +74,7 @@ export function NoteDetailScreen() {
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-white">
-      <header className="flex shrink-0 items-center justify-between px-4 pt-6">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between bg-white px-2.5 pt-2.5">
         <button
           type="button"
           aria-label="뒤로가기"
@@ -95,8 +95,8 @@ export function NoteDetailScreen() {
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 pb-8 pt-2">
-        <div className="mb-12 space-y-4">
+      <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-5 pb-8 pt-2">
+        <div className="mb-7 space-y-4 border-b border-[#e9edf2] pb-7">
           <Thumbnail
             source={note.source}
             src={note.thumbnailUrl}
@@ -104,7 +104,7 @@ export function NoteDetailScreen() {
             showArrow={note.source === "Threads"}
           />
           <div className="space-y-1">
-            <h1 className="break-words text-center text-[26px] font-bold leading-snug tracking-[-0.01em]">
+            <h1 className="text-balance break-keep break-words text-center text-[26px] font-bold leading-snug tracking-[-0.01em]">
               {note.title}
             </h1>
             <MetaLine
@@ -116,7 +116,7 @@ export function NoteDetailScreen() {
         </div>
 
         {note.summaryLines.length > 0 ? (
-          <section className="space-y-2">
+          <section className="space-y-1.5">
             <SectionTitle>AI 요약</SectionTitle>
             <SummaryBullets lines={note.summaryLines} />
           </section>
@@ -125,8 +125,8 @@ export function NoteDetailScreen() {
         <KeyInfoPanel groups={note.keyInfo} />
 
         {noteCategories.length > 0 ? (
-          <section className="space-y-3">
-            <SectionTitle>킵박스</SectionTitle>
+          <section className="space-y-2">
+            <SectionTitle>카테고리</SectionTitle>
             <div className="flex flex-wrap gap-2">
               {noteCategories.map((category) => (
                 <StaticChip key={category.id} tone={categoryColor(categories.indexOf(category))}>

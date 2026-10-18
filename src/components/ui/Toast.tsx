@@ -51,7 +51,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {frame && toast
         ? createPortal(
-            <div className="pointer-events-none absolute inset-x-4 bottom-24 z-40 flex justify-center pb-[env(safe-area-inset-bottom)]">
+            <div className="pointer-events-none fixed inset-x-4 bottom-24 min-[431px]:absolute z-40 flex justify-center pb-[env(safe-area-inset-bottom)]">
               <div
                 key={toast.id}
                 role="status"

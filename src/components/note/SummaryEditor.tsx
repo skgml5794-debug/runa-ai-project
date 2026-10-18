@@ -31,7 +31,7 @@ export interface EditorValues {
   categoryIds: string[];
 }
 
-/** 저장 전에 만든 새 킵박스. 저장할 때 실제 킵박스로 만든다. */
+/** 저장 전에 만든 새 카테고리. 저장할 때 실제 카테고리로 만든다. */
 export interface PendingCategory {
   id: string;
   name: string;
@@ -46,7 +46,7 @@ export interface EditorInitial extends EditorValues {
   dateLabel: string;
 }
 
-/** 첫 요약 화면에서 항상 보여주는 핵심 정보 영역(순서 고정). */
+/** 첫 요약 화면에서 이 순서로 먼저 보여주는 핵심 정보 이름 */
 const DEFAULT_GROUPS = ["제품", "장소", "Tip"] as const;
 const LABEL_MAX = 10;
 const NEW_GROUP_LABEL = "새 카테고리";
@@ -76,20 +76,18 @@ interface EditableGroup extends KeyInfoGroup {
 }
 
 /**
- * 첫 요약 화면: 항목이 없어도 제품·장소·Tip 영역을 모두 보여주고, 빈 영역에는 빈 입력칸 하나를 둔다.
+ * 첫 요약 화면: 내용이 있는 핵심 정보 묶음만 보여준다. (비어 있으면 만들지 않고, 필요하면 사용자가 직접 추가한다.)
  * 수정 화면: 저장된 묶음만 그대로 보여준다.
  */
 function toEditableGroups(keyInfo: KeyInfoGroup[], firstSummary: boolean): EditableGroup[] {
   const groups = keyInfo.map((group) => ({ ...group, fallback: group.label }));
   if (!firstSummary) return groups;
-  const defaults = DEFAULT_GROUPS.map(
-    (label) => groups.find((group) => group.label === label) ?? { label, items: [], fallback: label },
-  );
-  const others = groups.filter((group) => !DEFAULT_GROUPS.some((label) => label === group.label));
-  return [...defaults, ...others].map((group) => ({
-    ...group,
-    items: group.items.length > 0 ? group.items : [""],
-  }));
+  const filled = groups.filter((group) => group.items.some((item) => item.trim() !== ""));
+  const rank = (label: string) => {
+    const index = DEFAULT_GROUPS.findIndex((name) => name === label);
+    return index === -1 ? DEFAULT_GROUPS.length : index;
+  };
+  return [...filled].sort((a, b) => rank(a.label) - rank(b.label));
 }
 
 interface SummaryEditorProps {
@@ -113,7 +111,7 @@ const FIELD_BASE = "border-mist focus:border-slate";
 
 /**
  * 새 요약 결과 화면과 저장된 킵노트의 수정 화면이 함께 쓰는 편집기.
- * 제목·핵심 요약 줄·핵심 정보 항목의 텍스트와 킵박스 지정만 바꿀 수 있다.
+ * 제목·핵심 요약 줄·핵심 정보 항목의 텍스트와 카테고리 지정만 바꿀 수 있다.
  */
 export function SummaryEditor({
   initial,
@@ -273,7 +271,7 @@ export function SummaryEditor({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
-      <header className="flex shrink-0 items-center justify-end px-4 pt-6">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-end bg-white px-2.5 pt-2.5">
         <button
           type="button"
           aria-label="닫기"
@@ -284,7 +282,7 @@ export function SummaryEditor({
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 pb-8 pt-2">
+      <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-5 pb-8 pt-2">
         <div className="space-y-5">
           <Thumbnail
             source={initial.source}
@@ -380,7 +378,7 @@ export function SummaryEditor({
         </section>
 
         <section className="space-y-3">
-          <SectionTitle>킵박스</SectionTitle>
+          <SectionTitle>카테고리</SectionTitle>
           <div className="flex flex-wrap gap-2">
             {allCategories.map((category, index) => {
               const selected = validSelected.includes(category.id);
@@ -399,7 +397,7 @@ export function SummaryEditor({
             })}
             <button
               type="button"
-              aria-label="킵박스 추가"
+              aria-label="카테고리 추가"
               aria-expanded={adding}
               disabled={atTotalMax || atNoteMax}
               onClick={() => setAdding((open) => !open)}
@@ -414,7 +412,7 @@ export function SummaryEditor({
               <div className="flex gap-2">
                 <input
                   autoFocus
-                  aria-label="킵박스명"
+                  aria-label="카테고리명"
                   value={newName}
                   maxLength={CATEGORY_NAME_MAX}
                   placeholder={MESSAGES.categoryNamePlaceholder}
@@ -453,7 +451,7 @@ export function SummaryEditor({
         </section>
 
         {firstSummary ? (
-          <ul className="-mx-6 space-y-1 border-t border-[#e9edf2] px-6 pt-5 text-sm text-slate-deep">
+          <ul className="space-y-2.5 border-t border-[#e9edf2] pt-5 text-sm text-slate-deep">
             {MESSAGES.summaryNotices.map((notice) => (
               <li key={notice} className="flex gap-2">
                 <span aria-hidden className="mt-[0.7em] size-[3px] shrink-0 rounded-full bg-slate" />
@@ -464,7 +462,7 @@ export function SummaryEditor({
         ) : null}
       </div>
 
-      <footer className="shrink-0 bg-white px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
+      <footer className="sticky bottom-0 z-10 shrink-0 bg-white px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
         <Button fullWidth disabled={saving} onClick={handleSave}>
           {firstSummary ? "킵노트에 저장" : "저장"}
         </Button>
