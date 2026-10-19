@@ -4,7 +4,7 @@ import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HomeLogoLink } from "../ui/Logo";
-import { categoryProp, track } from "@/lib/analytics";
+import { categoryProp, track, trackBoth } from "@/lib/analytics";
 import { categoryColor } from "@/lib/category-colors";
 import { MESSAGES } from "@/lib/constants";
 import {
@@ -291,12 +291,17 @@ export function NotesScreen() {
                   onOpen={
                     query.trim() === ""
                       ? undefined
-                      : () =>
+                      : () => {
                           track("search_result_opened", {
                             saved_item_id: note.id,
                             rank_position: index + 1,
                             category_id: categoryProp(note.categoryIds),
-                          })
+                          });
+                          trackBoth("Search Result Clicked", {
+                            result_position: index + 1,
+                            result_count: visibleNotes.length,
+                          });
+                        }
                   }
                 />
               </li>

@@ -3,7 +3,7 @@
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { linkType, track } from "@/lib/analytics";
+import { linkType, secondsSince, track, trackBoth } from "@/lib/analytics";
 import { MESSAGES } from "@/lib/constants";
 import { parseLink } from "@/lib/link";
 import { launchApp } from "@/lib/open-app";
@@ -44,6 +44,29 @@ export function HomeScreen() {
   const submitting = useRef(false);
   // 붙여넣기로 입력했는지 (입력창 onPaste)
   const pasted = useRef(false);
+  // 입력을 시작한 시각. null이면 아직 입력하지 않았다.
+  const typingStartedAt = useRef<number | null>(null);
+  // 제출했거나 이탈을 이미 기록했으면 true
+  const abandonDone = useRef(false);
+  // 마지막으로 한 일: 입력, 붙여넣기, 잘못된 링크로 제출
+  const lastStep = useRef<"typing" | "pasted" | "invalid_link">("typing");
+
+  // 입력을 시작했지만 제출하지 않고 화면을 떠나거나 탭을 닫으면 이탈로 기록한다.
+  useEffect(() => {
+    const reportAbandoned = () => {
+      if (typingStartedAt.current === null || abandonDone.current) return;
+      abandonDone.current = true;
+      trackBoth("Link Submission Abandoned", {
+        last_step: lastStep.current,
+        elapsed_time: secondsSince(typingStartedAt.current),
+      });
+    };
+    window.addEventListener("pagehide", reportAbandoned);
+    return () => {
+      window.removeEventListener("pagehide", reportAbandoned);
+      reportAbandoned();
+    };
+  }, []);
 
   // 처음 방문이면 홈 대신 온보딩을 먼저 보여준다.
   useEffect(() => {
@@ -70,9 +93,11 @@ export function HomeScreen() {
         error_code: "invalid_url",
         error_message_shown: "fetchError",
       });
+      lastStep.current = "invalid_link";
       setAlertMessage(MESSAGES.fetchError);
       return;
     }
+    abandonDone.current = true;
     submitting.current = true;
     setSession(SESSION_KEYS.pendingUrl, parsed.url);
     router.push("/loading");
@@ -112,8 +137,16 @@ export function HomeScreen() {
               value={link}
               onPaste={() => {
                 pasted.current = true;
+                lastStep.current = "pasted";
               }}
               onChange={(event) => {
+                if (event.target.value.trim() !== "") {
+                  typingStartedAt.current ??= Date.now();
+                  abandonDone.current = false;
+                  if (lastStep.current === "invalid_link") {
+                    lastStep.current = pasted.current ? "pasted" : "typing";
+                  }
+                }
                 setSession(SESSION_KEYS.homeLink, event.target.value);
               }}
               placeholder="인스타그램 또는 스레드 링크를 붙여넣어 주세요"

@@ -68,6 +68,8 @@ export interface Draft {
   result: SummaryResult;
   /** 요약 완료 토스트를 아직 보여주지 않았으면 true */
   showToast: boolean;
+  /** 링크 제출부터 요약 완료까지 걸린 시간(초) */
+  summaryDuration?: number;
 }
 
 export function parseDraft(raw: string): Draft | null {

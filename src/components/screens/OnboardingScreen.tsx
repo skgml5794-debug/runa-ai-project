@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { trackBoth } from "@/lib/analytics";
 import { completeOnboarding } from "@/lib/onboarding";
 import { Button } from "../ui/Button";
 import { CheckIcon, CrossIcon, InstagramIcon, ThreadsIcon, TriangleIcon } from "../ui/icons";
@@ -180,6 +181,11 @@ export function OnboardingScreen() {
   const [dragX, setDragX] = useState<number | null>(null);
   const start = useRef<{ x: number; y: number; horizontal: boolean | null } | null>(null);
   const last = index === SLIDES.length - 1;
+  // 사용자가 실제로 본 슬라이드
+  const seen = useRef(new Set<number>());
+  useEffect(() => {
+    seen.current.add(index);
+  }, [index]);
 
   const begin = (x: number, y: number) => {
     start.current = { x, y, horizontal: null };
@@ -212,6 +218,10 @@ export function OnboardingScreen() {
       setIndex(index + 1);
       return;
     }
+    trackBoth("Onboarding Completed", {
+      completed_steps: seen.current.size,
+      skipped_steps: SLIDES.length - seen.current.size,
+    });
     completeOnboarding();
     router.replace("/");
   };

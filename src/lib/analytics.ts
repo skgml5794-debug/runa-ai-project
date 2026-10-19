@@ -1,5 +1,6 @@
 "use client";
 
+import * as amplitude from "@amplitude/analytics-browser";
 import mixpanel from "mixpanel-browser";
 import type { Source } from "./types";
 
@@ -64,6 +65,24 @@ export function track(event: string, properties: Props = {}) {
   } catch {
     // 추적 실패가 앱 동작에 영향을 주지 않게 한다.
   }
+}
+
+const AMPLITUDE_KEY = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
+
+/** Mixpanel과 Amplitude 양쪽으로 보낸다. Amplitude 초기화는 AmplitudeInit이 맡는다. */
+export function trackBoth(event: string, properties: Props = {}) {
+  track(event, properties);
+  if (typeof window === "undefined" || !AMPLITUDE_KEY) return;
+  try {
+    amplitude.track(event, properties);
+  } catch {
+    // 추적 실패가 앱 동작에 영향을 주지 않게 한다.
+  }
+}
+
+/** 초 단위, 소수점 한 자리 */
+export function secondsSince(startedAt: number): number {
+  return Math.round((Date.now() - startedAt) / 100) / 10;
 }
 
 export function linkType(source: Source | null | undefined): string {

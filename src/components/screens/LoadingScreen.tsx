@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { linkType, track } from "@/lib/analytics";
+import { linkType, secondsSince, track } from "@/lib/analytics";
 import { withTimeout } from "@/lib/async";
 import { MESSAGES, SUMMARY_TIMEOUT_MS } from "@/lib/constants";
 import {
@@ -30,6 +30,7 @@ export function LoadingScreen() {
 
     // 화면을 벗어나면(뒤로가기 등) 결과를 무시해 요청을 취소한 것과 같이 처리한다.
     let cancelled = false;
+    const startedAt = Date.now();
     withTimeout(summarizer.summarize(url), SUMMARY_TIMEOUT_MS)
       .then((result) => {
         if (cancelled) return;
@@ -38,7 +39,7 @@ export function LoadingScreen() {
           link_type: linkType(result.source),
           validation_status: "success",
         });
-        writeDraft({ result, showToast: true });
+        writeDraft({ result, showToast: true, summaryDuration: secondsSince(startedAt) });
         router.replace("/summary");
       })
       .catch((error: unknown) => {

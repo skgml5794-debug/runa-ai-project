@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { categoryProp, contentType, track } from "@/lib/analytics";
+import { categoryProp, contentType, track, trackBoth } from "@/lib/analytics";
 import { remapCategoryIds } from "@/lib/categories";
 import { MESSAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/notes";
+import { compareSummary } from "@/lib/summary-diff";
 import {
   SESSION_KEYS,
   clearDraftSession,
@@ -40,6 +41,11 @@ export function SummaryScreen() {
   useEffect(() => {
     if (!draft?.showToast) return;
     toast.show(MESSAGES.summaryDone);
+    // 토스트를 처음 띄울 때만 보내 새로고침해도 중복되지 않는다.
+    trackBoth("Summary Viewed", {
+      source: draft.result.source,
+      summary_duration: draft.summaryDuration ?? 0,
+    });
     writeDraft({ ...draft, showToast: false });
   }, [draft, toast]);
 
@@ -89,6 +95,14 @@ export function SummaryScreen() {
           save_method: "standard",
           category_id: categoryProp(categoryIds),
           content_type: contentType(result.url, result.source),
+        });
+        const stats = compareSummary(result, values);
+        trackBoth("Summary Saved", {
+          edited: stats.edited,
+          fields_changed_count: stats.fieldsChangedCount,
+          items_added: stats.itemsAdded,
+          items_removed: stats.itemsRemoved,
+          source: result.source,
         });
         leaving.current = true;
         clearDraftSession();
