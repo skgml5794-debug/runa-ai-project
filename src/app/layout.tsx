@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
+import { AmplitudeInit } from "@/components/AmplitudeInit";
 import { AppFrame } from "@/components/AppFrame";
 
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className="min-h-full antialiased">
       <body className="min-h-full">
+        <AmplitudeInit />
         <AppFrame>{children}</AppFrame>
       </body>
     </html>
