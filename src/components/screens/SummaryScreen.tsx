@@ -28,6 +28,7 @@ export function SummaryScreen() {
   const raw = useSessionValue(SESSION_KEYS.draft);
   const draft = useMemo(() => parseDraft(raw), [raw]);
   const leaving = useRef(false);
+  const viewedSent = useRef(false);
 
   useEffect(() => {
     if (hydrated && !draft && !leaving.current) router.replace("/");
@@ -41,11 +42,17 @@ export function SummaryScreen() {
   useEffect(() => {
     if (!draft?.showToast) return;
     toast.show(MESSAGES.summaryDone);
-    // 토스트를 처음 띄울 때만 보내 새로고침해도 중복되지 않는다.
-    trackBoth("Summary Viewed", {
-      source: draft.result.source,
-      summary_duration: draft.summaryDuration ?? 0,
-    });
+    // 토스트를 처음 띄울 때만 보내 새로고침해도 중복되지 않는다. (개발 모드 이중 실행도 ref로 막는다)
+    if (!viewedSent.current) {
+      viewedSent.current = true;
+      trackBoth("Summary Viewed", {
+        source: draft.result.source,
+        // 값을 모르면(이전 형식의 draft) 0으로 채우지 않고 속성을 뺀다.
+        ...(draft.summaryGenerationDurationMs !== undefined && {
+          summary_generation_duration_ms: draft.summaryGenerationDurationMs,
+        }),
+      });
+    }
     writeDraft({ ...draft, showToast: false });
   }, [draft, toast]);
 

@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { trackBoth } from "@/lib/analytics";
-import { completeOnboarding } from "@/lib/onboarding";
+import { track, trackBoth } from "@/lib/analytics";
+import { completeOnboarding, useOnboarded } from "@/lib/onboarding";
 import { Button } from "../ui/Button";
 import { CheckIcon, CrossIcon, InstagramIcon, ThreadsIcon, TriangleIcon } from "../ui/icons";
 import { Sparkle } from "../ui/Sparkle";
@@ -183,6 +183,14 @@ export function OnboardingScreen() {
   const last = index === SLIDES.length - 1;
   // 사용자가 실제로 본 슬라이드
   const seen = useRef(new Set<number>());
+  // 아직 온보딩을 마치지 않은 사용자에게 첫 슬라이드가 보일 때 한 번만 기록한다.
+  const onboarded = useOnboarded();
+  const startedSent = useRef(false);
+  useEffect(() => {
+    if (onboarded !== false || startedSent.current) return;
+    startedSent.current = true;
+    track("onboarding_started", { total_steps: SLIDES.length });
+  }, [onboarded]);
   useEffect(() => {
     seen.current.add(index);
   }, [index]);

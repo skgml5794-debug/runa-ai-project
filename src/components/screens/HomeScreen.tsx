@@ -99,6 +99,11 @@ export function HomeScreen() {
     }
     abandonDone.current = true;
     submitting.current = true;
+    // 올바른 링크로 요약 요청을 넘기는 순간. submitting 가드 덕분에 제출당 한 번만 보낸다.
+    track("link_submitted", {
+      link_type: linkType(parsed.source),
+      input_method: pasted.current ? "paste" : "type",
+    });
     setSession(SESSION_KEYS.pendingUrl, parsed.url);
     router.push("/loading");
   };
@@ -141,7 +146,15 @@ export function HomeScreen() {
               }}
               onChange={(event) => {
                 if (event.target.value.trim() !== "") {
-                  typingStartedAt.current ??= Date.now();
+                  // 입력창을 열기만 한 것은 제외하고, 내용이 생긴 첫 순간에 한 번만 기록한다.
+                  // prefilled: 오류 뒤 복원된 링크를 이어서 고치는 경우라 새 입력과 구분한다.
+                  if (typingStartedAt.current === null) {
+                    typingStartedAt.current = Date.now();
+                    track("link_input_started", {
+                      input_method: pasted.current ? "paste" : "type",
+                      prefilled: link.trim() !== "",
+                    });
+                  }
                   abandonDone.current = false;
                   if (lastStep.current === "invalid_link") {
                     lastStep.current = pasted.current ? "pasted" : "typing";
