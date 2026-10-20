@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { linkType, track } from "@/lib/analytics";
-import { withTimeout } from "@/lib/async";
+import { flushCancelReports, linkType, sessionId, track, trackBoth } from "@/lib/analytics";
+import { uid, withTimeout } from "@/lib/async";
 import { MESSAGES, SUMMARY_TIMEOUT_MS } from "@/lib/constants";
 import {
   SESSION_KEYS,
@@ -12,6 +12,7 @@ import {
   writeDraft,
 } from "@/lib/session";
 import { parseLink } from "@/lib/link";
+import { addPendingCancel, removePendingCancel, type CancelReason } from "@/lib/pending-cancel";
 import { summarizer } from "@/lib/summarizer";
 import { SummarizeError } from "@/lib/summarizer/claude";
 import { AlertDialog } from "../ui/Dialog";
@@ -38,22 +39,45 @@ export function LoadingScreen() {
     const startedAt = Date.now();
     mounted.current = true;
 
+    const attemptId = uid();
+
     // 요약이 끝나기 전에 화면을 벗어난 경우만 기록한다. (성공·실패한 뒤 이동은 제외)
-    const reportCancelled = (reason: "navigated_away" | "page_closed") => {
+    // 탭을 닫을 때는 전송 전에 페이지가 사라질 수 있어, 먼저 저장소에 남기고 보낸다.
+    // 보내지 못한 기록은 다음 방문에 다시 보낸다. (lib/pending-cancel.ts)
+    const reportCancelled = (reason: CancelReason, sendNow: boolean) => {
       if (settled.current || cancelReported.current) return;
       cancelReported.current = true;
-      track("summary_loading_cancelled", {
-        link_type: linkType(parseLink(url)?.source),
-        cancel_reason: reason,
-        elapsed_ms: Date.now() - startedAt,
+      const linkKind = linkType(parseLink(url)?.source);
+      const leftAt = Date.now();
+      const stored = addPendingCancel({
+        id: attemptId,
+        linkType: linkKind,
+        reason,
+        startedAt,
+        leftAt,
+        sessionId: sessionId(),
       });
+      if (!stored) {
+        // 저장소를 쓸 수 없으면 기록 없이 바로 보낸다.
+        trackBoth("summary_loading_cancelled", {
+          link_type: linkKind,
+          cancel_reason: reason,
+          elapsed_ms: leftAt - startedAt,
+        });
+        return;
+      }
+      if (sendNow) void flushCancelReports();
     };
-    const onPageHide = () => reportCancelled("page_closed");
+    // 뒤로가기 캐시(persisted)로 들어가는 경우는 페이지가 복원돼 요약이 끝날 수 있으므로
+    // 바로 보내지 않고 기록만 남긴다. 끝나면 아래에서 기록을 지운다.
+    const onPageHide = (event: PageTransitionEvent) =>
+      reportCancelled("page_closed", !event.persisted);
     window.addEventListener("pagehide", onPageHide);
     withTimeout(summarizer.summarize(url), SUMMARY_TIMEOUT_MS)
       .then((result) => {
         if (cancelled) return;
         settled.current = true;
+        removePendingCancel(attemptId);
         setSession(SESSION_KEYS.pendingUrl, "");
         track("link_submission_succeeded", {
           link_type: linkType(result.source),
@@ -69,6 +93,7 @@ export function LoadingScreen() {
       .catch((error: unknown) => {
         if (cancelled) return;
         settled.current = true;
+        removePendingCancel(attemptId);
         setSession(SESSION_KEYS.pendingUrl, "");
         const kind = error instanceof SummarizeError ? error.kind : "failed";
         track("link_submission_failed", {
@@ -85,7 +110,7 @@ export function LoadingScreen() {
       window.removeEventListener("pagehide", onPageHide);
       // 개발 모드에서는 해제 직후 같은 화면이 다시 마운트된다. 다음 틱에도 해제된 상태일 때만 이탈로 본다.
       setTimeout(() => {
-        if (!mounted.current) reportCancelled("navigated_away");
+        if (!mounted.current) reportCancelled("navigated_away", true);
       }, 0);
     };
   }, [router]);

@@ -2,6 +2,12 @@
 
 import * as amplitude from "@amplitude/analytics-browser";
 import mixpanel from "mixpanel-browser";
+import {
+  flushPendingCancels,
+  isRecovered,
+  type Destinations,
+  type PendingCancel,
+} from "./pending-cancel";
 import type { Source } from "./types";
 
 /**
@@ -74,10 +80,76 @@ export function trackBoth(event: string, properties: Props = {}) {
   track(event, properties);
   if (typeof window === "undefined" || !AMPLITUDE_KEY) return;
   try {
-    amplitude.track(event, properties);
+    // Mixpanel과 같은 속성이 되도록 session_id도 함께 보낸다.
+    amplitude.track(event, { ...properties, session_id: sessionId() });
   } catch {
     // 추적 실패가 앱 동작에 영향을 주지 않게 한다.
   }
+}
+
+const SEND_TIMEOUT_MS = 10_000;
+
+/** 임시로 남긴 요약 취소 기록 하나를 todo가 true인 곳으로 보낸다. 기록 id를 중복 제거 키로 쓴다. */
+async function sendPendingCancel(
+  record: PendingCancel,
+  todo: Destinations,
+): Promise<Destinations> {
+  const event = "summary_loading_cancelled";
+  const properties = {
+    link_type: record.linkType,
+    cancel_reason: record.reason,
+    elapsed_ms: record.leftAt - record.startedAt,
+    // 이전 방문에서 남긴 기록을 다시 보내는 것이면 true
+    recovered: isRecovered(record.id),
+    session_id: record.sessionId,
+  };
+
+  let mixpanelDone = !todo.mixpanel;
+  if (todo.mixpanel) {
+    if (!TOKEN) {
+      mixpanelDone = true; // 보낼 곳이 없으면 더 시도하지 않는다.
+    } else if (initAnalytics()) {
+      try {
+        // Mixpanel은 성공 여부를 알 수 없다. SDK의 저장 대기열에 넘기면 SDK가 다시 보내 준다.
+        mixpanel.track(event, {
+          ...properties,
+          $insert_id: record.id,
+          time: record.leftAt / 1000,
+        });
+        mixpanelDone = true;
+      } catch {
+        // 다음 방문에 다시 시도한다.
+      }
+    }
+  }
+
+  let amplitudeDone = !todo.amplitude;
+  if (todo.amplitude) {
+    if (!AMPLITUDE_KEY) {
+      amplitudeDone = true;
+    } else {
+      try {
+        const sent = amplitude.track(event, properties, {
+          insert_id: record.id,
+          time: record.leftAt,
+        }).promise;
+        // 서버가 받았다는 응답(200)을 확인해야 완료로 본다.
+        const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), SEND_TIMEOUT_MS));
+        const result = await Promise.race([sent, timeout]);
+        amplitudeDone = result?.code === 200;
+      } catch {
+        // 다음 방문에 다시 시도한다.
+      }
+    }
+  }
+
+  return { mixpanel: mixpanelDone, amplitude: amplitudeDone };
+}
+
+/** 남아 있는 요약 취소 기록을 보낸다. 앱을 열 때와 기록을 남긴 직후에 부른다. */
+export function flushCancelReports(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  return flushPendingCancels(sendPendingCancel);
 }
 
 /** 초 단위, 소수점 한 자리 */

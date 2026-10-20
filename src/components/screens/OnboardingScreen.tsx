@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { track, trackBoth } from "@/lib/analytics";
+import { trackBoth } from "@/lib/analytics";
 import { completeOnboarding, useOnboarded } from "@/lib/onboarding";
 import { Button } from "../ui/Button";
 import { CheckIcon, CrossIcon, InstagramIcon, ThreadsIcon, TriangleIcon } from "../ui/icons";
@@ -189,7 +189,7 @@ export function OnboardingScreen() {
   useEffect(() => {
     if (onboarded !== false || startedSent.current) return;
     startedSent.current = true;
-    track("onboarding_started", { total_steps: SLIDES.length });
+    trackBoth("onboarding_started", { total_steps: SLIDES.length });
   }, [onboarded]);
   useEffect(() => {
     seen.current.add(index);
