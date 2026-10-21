@@ -73,6 +73,14 @@ export function HomeScreen() {
     if (onboarded === false) router.replace("/onboarding");
   }, [onboarded, router]);
 
+  // 홈이 실제로 보일 때(온보딩을 마친 사용자) 마운트당 한 번만 기록한다. 퍼널의 시작 단계.
+  const viewedSent = useRef(false);
+  useEffect(() => {
+    if (!onboarded || viewedSent.current) return;
+    viewedSent.current = true;
+    trackBoth("Home Viewed");
+  }, [onboarded]);
+
   const canSubmit = link.trim() !== "";
 
   const submit = () => {

@@ -79,7 +79,8 @@ export function LoadingScreen() {
         settled.current = true;
         removePendingCancel(attemptId);
         setSession(SESSION_KEYS.pendingUrl, "");
-        track("link_submission_succeeded", {
+        // 요약 생성 성공. 기존 link_submission_succeeded를 대체해 같은 순간에 두 번 보내지 않는다.
+        trackBoth("Summary Generated", {
           link_type: linkType(result.source),
           validation_status: "success",
         });
