@@ -90,11 +90,6 @@ export function HomeScreen() {
       return;
     }
     const parsed = parseLink(link);
-    trackBoth("Link Submission Started", {
-      link_type: linkType(parsed?.source),
-      input_method: pasted.current ? "paste" : "type",
-      category_selected_on_submit: "none",
-    });
     if (!parsed) {
       trackBoth("Link Submission Failed", {
         link_type: "unknown",
