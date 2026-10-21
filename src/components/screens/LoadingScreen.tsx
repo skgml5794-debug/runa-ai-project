@@ -59,7 +59,7 @@ export function LoadingScreen() {
       });
       if (!stored) {
         // 저장소를 쓸 수 없으면 기록 없이 바로 보낸다.
-        trackBoth("summary_loading_cancelled", {
+        trackBoth("Summary Loading Cancelled", {
           link_type: linkKind,
           cancel_reason: reason,
           elapsed_ms: leftAt - startedAt,

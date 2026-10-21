@@ -189,7 +189,7 @@ export function OnboardingScreen() {
   useEffect(() => {
     if (onboarded !== false || startedSent.current) return;
     startedSent.current = true;
-    trackBoth("onboarding_started", { total_steps: SLIDES.length });
+    trackBoth("Onboarding Started", { total_steps: SLIDES.length });
   }, [onboarded]);
   useEffect(() => {
     seen.current.add(index);

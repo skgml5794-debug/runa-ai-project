@@ -94,7 +94,7 @@ async function sendPendingCancel(
   record: PendingCancel,
   todo: Destinations,
 ): Promise<Destinations> {
-  const event = "summary_loading_cancelled";
+  const event = "Summary Loading Cancelled";
   const properties = {
     link_type: record.linkType,
     cancel_reason: record.reason,
