@@ -3,7 +3,7 @@
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { linkType, secondsSince, track, trackBoth } from "@/lib/analytics";
+import { linkType, secondsSince, trackBoth } from "@/lib/analytics";
 import { MESSAGES } from "@/lib/constants";
 import { parseLink } from "@/lib/link";
 import { launchApp } from "@/lib/open-app";
@@ -90,13 +90,13 @@ export function HomeScreen() {
       return;
     }
     const parsed = parseLink(link);
-    track("link_submit_started", {
+    trackBoth("Link Submission Started", {
       link_type: linkType(parsed?.source),
       input_method: pasted.current ? "paste" : "type",
       category_selected_on_submit: "none",
     });
     if (!parsed) {
-      track("link_submission_failed", {
+      trackBoth("Link Submission Failed", {
         link_type: "unknown",
         error_code: "invalid_url",
         error_message_shown: "fetchError",

@@ -4,7 +4,7 @@ import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HomeLogoLink } from "../ui/Logo";
-import { categoryProp, track, trackBoth } from "@/lib/analytics";
+import { categoryProp, trackBoth } from "@/lib/analytics";
 import { categoryColor } from "@/lib/category-colors";
 import { MESSAGES } from "@/lib/constants";
 import {
@@ -121,7 +121,7 @@ export function NotesScreen() {
   const applySearch = () => {
     // 검색어를 입력하고 Enter를 눌렀을 때만 기록한다. (검색어를 지우는 경우는 제외)
     if (text.trim() !== "") {
-      track("search_performed", {
+      trackBoth("Search Performed", {
         query: text.trim(),
         search_mode: activeCategory || uncategorizedActive ? "category_filter" : "keyword_only",
         results_limit: PAGE_SIZE,
@@ -240,7 +240,7 @@ export function NotesScreen() {
                 outline
                 selected={activeCategory?.id === category.id}
                 onClick={() => {
-                  track("category_selected", {
+                  trackBoth("Category Selected", {
                     category_id: category.id,
                     selection_context: "filter_category",
                     previous_category_id:
@@ -257,7 +257,7 @@ export function NotesScreen() {
                 compact
                 selected={uncategorizedActive}
                 onClick={() => {
-                  track("category_selected", {
+                  trackBoth("Category Selected", {
                     category_id: UNCATEGORIZED_ID,
                     selection_context: "filter_category",
                     previous_category_id: activeCategory?.id ?? "none",
@@ -292,14 +292,11 @@ export function NotesScreen() {
                     query.trim() === ""
                       ? undefined
                       : () => {
-                          track("search_result_opened", {
-                            saved_item_id: note.id,
-                            rank_position: index + 1,
-                            category_id: categoryProp(note.categoryIds),
-                          });
                           trackBoth("Search Result Clicked", {
                             result_position: index + 1,
                             result_count: visibleNotes.length,
+                            saved_item_id: note.id,
+                            category_id: categoryProp(note.categoryIds),
                           });
                         }
                   }

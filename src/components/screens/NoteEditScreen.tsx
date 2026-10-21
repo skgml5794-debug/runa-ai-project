@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { track } from "@/lib/analytics";
+import { trackBoth } from "@/lib/analytics";
 import { remapCategoryIds } from "@/lib/categories";
 import { formatDate } from "@/lib/notes";
 import { useKeepnote } from "../KeepnoteProvider";
@@ -52,7 +52,7 @@ export function NoteEditScreen() {
           categoryIds,
         });
         created.forEach((category) =>
-          track("category_created", {
+          trackBoth("Category Created", {
             category_id: category.id,
             category_name_length: category.name.length,
             from_flow: "from_item_detail",
@@ -62,7 +62,7 @@ export function NoteEditScreen() {
         categoryIds
           .filter((id) => !note.categoryIds.includes(id))
           .forEach((id) =>
-            track("category_selected", {
+            trackBoth("Category Selected", {
               category_id: id,
               selection_context: "edit_item",
               previous_category_id: "none",

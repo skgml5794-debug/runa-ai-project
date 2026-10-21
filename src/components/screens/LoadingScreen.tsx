@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { flushCancelReports, linkType, sessionId, track, trackBoth } from "@/lib/analytics";
+import { flushCancelReports, linkType, sessionId, trackBoth } from "@/lib/analytics";
 import { uid, withTimeout } from "@/lib/async";
 import { MESSAGES, SUMMARY_TIMEOUT_MS } from "@/lib/constants";
 import {
@@ -97,7 +97,7 @@ export function LoadingScreen() {
         removePendingCancel(attemptId);
         setSession(SESSION_KEYS.pendingUrl, "");
         const kind = error instanceof SummarizeError ? error.kind : "failed";
-        track("link_submission_failed", {
+        trackBoth("Link Submission Failed", {
           link_type: linkType(parseLink(url)?.source),
           error_code: kind === "insufficient" ? "insufficient_content" : "fetch_failed",
           error_message_shown: kind === "insufficient" ? "insufficientContent" : "fetchError",

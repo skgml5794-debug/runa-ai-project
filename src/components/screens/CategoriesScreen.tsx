@@ -11,7 +11,7 @@ import {
   MAX_CATEGORIES,
   MESSAGES,
 } from "@/lib/constants";
-import { track } from "@/lib/analytics";
+import { trackBoth } from "@/lib/analytics";
 import { HomeLogoLink } from "../ui/Logo";
 import { countByCategory, formatCount } from "@/lib/notes";
 import type { Category } from "@/lib/types";
@@ -164,7 +164,7 @@ export function CategoriesScreen() {
     if (addError || atMax) return;
     const [created] = await addCategories([newName]);
     if (created) {
-      track("category_created", {
+      trackBoth("Category Created", {
         category_id: created.id,
         category_name_length: created.name.length,
         from_flow: "from_categories_page",

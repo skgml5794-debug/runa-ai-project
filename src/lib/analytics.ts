@@ -184,7 +184,7 @@ export function trackPageView(pathname: string) {
   const page = pathname
     .replace(/^\/notes\/[^/]+\/edit$/, "/notes/[id]/edit")
     .replace(/^\/notes\/[^/]+$/, "/notes/[id]");
-  track("Page View", { page });
+  track("Page Viewed", { page });
 }
 
 let appOpenedSent = false;
@@ -203,7 +203,7 @@ export function trackAppOpened(pathname: string) {
   } catch {
     // 주소를 읽지 못하면 기본값 사용
   }
-  track("app_opened", {
+  trackBoth("App Opened", {
     source,
     referrer_domain: referrerDomain,
     page_url: pathname,

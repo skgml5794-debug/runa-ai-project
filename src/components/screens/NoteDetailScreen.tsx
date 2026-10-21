@@ -3,7 +3,7 @@
 import { ChevronLeft, Ellipsis } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useState } from "react";
-import { categoryProp, contentType, track } from "@/lib/analytics";
+import { categoryProp, contentType, trackBoth } from "@/lib/analytics";
 import { MESSAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/notes";
 import { SESSION_KEYS, getSession } from "@/lib/session";
@@ -43,7 +43,7 @@ export function NoteDetailScreen() {
   const openedId = note?.id;
   useEffect(() => {
     if (!note) return;
-    track("saved_item_opened", {
+    trackBoth("Saved Item Opened", {
       saved_item_id: note.id,
       content_type: contentType(note.url, note.source),
       category_id: categoryProp(note.categoryIds),

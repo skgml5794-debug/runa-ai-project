@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { categoryProp, contentType, track, trackBoth } from "@/lib/analytics";
+import { categoryProp, contentType, trackBoth } from "@/lib/analytics";
 import { remapCategoryIds } from "@/lib/categories";
 import { MESSAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/notes";
@@ -85,24 +85,19 @@ export function SummaryScreen() {
           categoryIds,
         });
         created.forEach((category) =>
-          track("category_created", {
+          trackBoth("Category Created", {
             category_id: category.id,
             category_name_length: category.name.length,
             from_flow: "on_submit",
           }),
         );
         categoryIds.forEach((id) =>
-          track("category_selected", {
+          trackBoth("Category Selected", {
             category_id: id,
             selection_context: "on_submit",
             previous_category_id: "none",
           }),
         );
-        track("save_confirmed", {
-          save_method: "standard",
-          category_id: categoryProp(categoryIds),
-          content_type: contentType(result.url, result.source),
-        });
         const stats = compareSummary(result, values);
         trackBoth("Summary Saved", {
           edited: stats.edited,
@@ -110,6 +105,9 @@ export function SummaryScreen() {
           items_added: stats.itemsAdded,
           items_removed: stats.itemsRemoved,
           source: result.source,
+          save_method: "standard",
+          category_id: categoryProp(categoryIds),
+          content_type: contentType(result.url, result.source),
         });
         leaving.current = true;
         clearDraftSession();
