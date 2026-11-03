@@ -15,11 +15,13 @@ import {
 import type { KeyInfoGroup, Source } from "@/lib/types";
 import { useKeepnote } from "../KeepnoteProvider";
 import { AutoTextarea } from "../ui/AutoTextarea";
+import { FIELD_LINE } from "../ui/field";
 import { Button } from "../ui/Button";
 import { Chip } from "../ui/Chip";
 import { AlertDialog, ConfirmDialog } from "../ui/Dialog";
 import {
   MetaLine,
+  SectionNote,
   SectionTitle,
   Thumbnail,
 } from "./NoteBlocks";
@@ -44,6 +46,8 @@ export interface EditorInitial extends EditorValues {
   source: Source;
   authorId: string;
   dateLabel: string;
+  /** 첫 요약 화면에서 AI가 추천한 킵박스 이름 */
+  suggestedCategory?: string;
 }
 
 /** 첫 요약 화면에서 이 순서로 먼저 보여주는 핵심 정보 이름 */
@@ -107,7 +111,7 @@ function snapshot(values: EditorValues, pendingCount: number): string {
 }
 
 const FIELD_BOX = "rounded-2xl px-4 py-3 text-base leading-7";
-const FIELD_BASE = "border-mist focus:border-slate";
+const FIELD_BASE = FIELD_LINE;
 
 /**
  * 새 요약 결과 화면과 저장된 킵노트의 수정 화면이 함께 쓰는 편집기.
@@ -179,6 +183,26 @@ export function SummaryEditor({
   const requestClose = () => {
     if (dirty) setLeaveOpen(true);
     else onClose();
+  };
+
+  // 추천은 첫 요약 화면에서만, 이미 같은 이름이 선택돼 있지 않을 때만 보여준다.
+  const suggestion = firstSummary ? (initial.suggestedCategory ?? "").trim() : "";
+  const suggestedMatch = suggestion
+    ? allCategories.find((category) => category.name === suggestion)
+    : undefined;
+  const showSuggestion =
+    suggestion !== "" &&
+    !(suggestedMatch && validSelected.includes(suggestedMatch.id)) &&
+    (suggestedMatch ? !atNoteMax : !atTotalMax && !atNoteMax);
+
+  const applySuggestion = () => {
+    if (suggestedMatch) {
+      toggleCategory(suggestedMatch.id);
+      return;
+    }
+    const id = `new:${uid()}`;
+    setPending((previous) => [...previous, { id, name: normalizeCategoryName(suggestion) }]);
+    setSelectedIds([...validSelected, id]);
   };
 
   const toggleCategory = (id: string) => {
@@ -271,25 +295,32 @@ export function SummaryEditor({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
-      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-end bg-white px-2.5 pt-2.5">
-        <button
-          type="button"
-          aria-label="닫기"
-          onClick={requestClose}
-          className="flex size-11 items-center justify-center rounded-full text-midnight-ink"
-        >
-          <X className="size-6" aria-hidden />
-        </button>
-      </header>
-
-      <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-5 pb-8 pt-2">
-        <div className="space-y-5">
-          <Thumbnail
-            source={initial.source}
-            src={initial.thumbnailUrl}
-            href={initial.url}
-            showArrow={initial.source === "Threads"}
-          />
+      
+      <div className={`min-h-0 flex-1 overflow-y-auto px-5 pb-8 space-y-9 pt-7`}>
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+              <Thumbnail
+                compact
+                source={initial.source}
+                src={initial.thumbnailUrl}
+                href={initial.url}
+                showArrow={initial.source === "Threads"}
+              />
+              <MetaLine
+                stacked
+                source={initial.source}
+                authorId={initial.authorId}
+                dateLabel={initial.dateLabel}
+              />
+              <button
+                type="button"
+                aria-label="닫기"
+                onClick={requestClose}
+                className="-mr-2.5 -mt-1 ml-auto flex size-11 shrink-0 items-center justify-center self-start rounded-full text-midnight-ink"
+              >
+                <X className="size-6" aria-hidden />
+              </button>
+          </div>
           <div className="space-y-1.5">
             <input
               aria-label="제목"
@@ -299,20 +330,18 @@ export function SummaryEditor({
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.preventDefault();
               }}
-              className={`min-h-14 w-full rounded-2xl border bg-white px-4 text-center text-[26px] font-bold leading-snug outline-none transition-colors ${
-                title.trim() === "" ? "border-danger" : FIELD_BASE
-              }`}
-            />
-            <MetaLine
-              source={initial.source}
-              authorId={initial.authorId}
-              dateLabel={initial.dateLabel}
+              className={`min-h-14 w-full rounded-2xl border bg-white px-4 outline-none transition-colors ${
+                "text-base font-bold"
+              } ${title.trim() === "" ? "border-danger" : FIELD_BASE}`}
             />
           </div>
         </div>
 
-        <section className="space-y-3">
-          <SectionTitle>AI 요약</SectionTitle>
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <SectionTitle>AI 요약</SectionTitle>
+            <SectionNote>{MESSAGES.summaryAiNotice}</SectionNote>
+          </div>
           <ul className="space-y-2">
             {lines.map((line, index) => (
               <li key={index}>
@@ -328,9 +357,12 @@ export function SummaryEditor({
           </ul>
         </section>
 
-        <section className="space-y-3">
-          <SectionTitle>핵심 정보</SectionTitle>
-          <div className="space-y-4 rounded-2xl bg-fog p-4">
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <SectionTitle>핵심 정보</SectionTitle>
+            <SectionNote>{MESSAGES.summaryKeyInfoNotice}</SectionNote>
+          </div>
+          <div className="space-y-5">
             {keyInfo.map((group, groupIndex) =>
               group.items.length === 0 ? null : (
                 <div key={groupIndex} className="space-y-2">
@@ -345,13 +377,13 @@ export function SummaryEditor({
                       onKeyDown={(event) => {
                         if (event.key === "Enter") event.preventDefault();
                       }}
-                      className="block max-w-full rounded-full border border-transparent bg-white px-3 py-1 text-xs font-semibold text-graphite outline-none focus:border-slate"
+                      className={`block w-32 rounded-2xl border bg-white px-4 py-3 text-base text-midnight-ink outline-none ${FIELD_LINE}`}
                     />
                     <button
                       type="button"
                       aria-label={`${group.label || group.fallback} 삭제`}
                       onClick={() => removeKeyInfoGroup(groupIndex)}
-                      className="shrink-0 px-1 py-1 text-sm text-[#8b95a5]"
+                      className="shrink-0 px-1 py-1 text-sm text-[#8492a6] underline underline-offset-2"
                     >
                       삭제
                     </button>
@@ -367,18 +399,25 @@ export function SummaryEditor({
             )}
             <button
               type="button"
-              aria-label="핵심 정보 카테고리 추가"
+              aria-label="핵심 정보 내용 추가"
               onClick={addKeyInfoGroup}
-              className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-2xl border border-mist bg-white text-sm font-medium text-graphite"
+              className={`flex w-full items-center justify-center gap-1.5 rounded-2xl border border-[#e5e9ef] bg-white text-sm font-medium text-graphite min-h-14`}
             >
               <Plus className="size-4" aria-hidden />
-              카테고리 추가
+              내용 추가
             </button>
           </div>
         </section>
 
-        <section className="space-y-3">
-          <SectionTitle>카테고리</SectionTitle>
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <SectionTitle>킵박스</SectionTitle>
+            <div className="space-y-0.5">
+                {MESSAGES.summaryBoxNotices.map((notice) => (
+                  <SectionNote key={notice}>{notice}</SectionNote>
+                ))}
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             {allCategories.map((category, index) => {
               const selected = validSelected.includes(category.id);
@@ -395,9 +434,23 @@ export function SummaryEditor({
                 </Chip>
               );
             })}
+            {showSuggestion ? (
+              <button
+                type="button"
+                aria-label={`추천 킵박스 ${suggestion} 추가`}
+                onClick={applySuggestion}
+                className="relative inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[#d5dde8] bg-white px-4 text-sm font-medium text-midnight-ink"
+              >
+                <Plus className="size-4" aria-hidden />
+                {suggestion}
+                <span className="absolute -right-1.5 -top-2 rounded-full bg-midnight-ink px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                  추천
+                </span>
+              </button>
+            ) : null}
             <button
               type="button"
-              aria-label="카테고리 추가"
+              aria-label="킵박스 추가"
               aria-expanded={adding}
               disabled={atTotalMax || atNoteMax}
               onClick={() => setAdding((open) => !open)}
@@ -412,10 +465,10 @@ export function SummaryEditor({
               <div className="flex gap-2">
                 <input
                   autoFocus
-                  aria-label="카테고리명"
+                  aria-label="킵박스명"
                   value={newName}
                   maxLength={CATEGORY_NAME_MAX}
-                  placeholder={MESSAGES.categoryNamePlaceholder}
+                  placeholder={MESSAGES.editorBoxPlaceholder}
                   onChange={(event) => setNewName(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.nativeEvent.isComposing) {
@@ -424,9 +477,7 @@ export function SummaryEditor({
                     }
                   }}
                   className={`min-h-14 min-w-0 flex-1 rounded-2xl border px-4 text-base outline-none ${
-                    nameError === "duplicate"
-                      ? "border-danger"
-                      : "border-mist focus:border-slate"
+                    nameError === "duplicate" ? "border-danger bg-white" : FIELD_LINE
                   }`}
                 />
                 <Button
@@ -434,7 +485,7 @@ export function SummaryEditor({
                   disabled={nameError === "duplicate"}
                   onClick={commitNewCategory}
                 >
-                  완료
+                  추가
                 </Button>
               </div>
               {nameError === "duplicate" ? (
@@ -450,16 +501,6 @@ export function SummaryEditor({
           ) : null}
         </section>
 
-        {firstSummary ? (
-          <ul className="space-y-2.5 border-t border-[#e9edf2] pt-5 text-sm text-slate-deep">
-            {MESSAGES.summaryNotices.map((notice) => (
-              <li key={notice} className="flex gap-2">
-                <span aria-hidden className="mt-[0.7em] size-[3px] shrink-0 rounded-full bg-slate" />
-                {notice}
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </div>
 
       <footer className="sticky bottom-0 z-10 shrink-0 bg-white px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">

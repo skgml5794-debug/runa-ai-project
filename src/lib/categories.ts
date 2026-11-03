@@ -3,7 +3,7 @@ import { CATEGORY_NAME_MAX } from "./constants";
 /** 카테고리를 최대 개수보다 더 만들려 할 때 던진다. UI와 별개로 저장소에서도 막는다. */
 export class CategoryLimitError extends Error {
   constructor() {
-    super("카테고리 개수 한도를 넘었습니다.");
+    super("킵박스 개수 한도를 넘었습니다.");
     this.name = "CategoryLimitError";
   }
 }

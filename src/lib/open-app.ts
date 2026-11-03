@@ -41,7 +41,12 @@ export function launchApp(target: AppTarget): boolean {
   document.addEventListener("visibilitychange", markLeft, { once: true });
   window.addEventListener("pagehide", markLeft, { once: true });
   window.addEventListener("blur", markLeft, { once: true });
-  window.location.href = target.iosApp;
+  // 앱 주소는 숨은 프레임으로 열어, 앱이 없을 때 Safari의 '주소가 유효하지 않음' 안내가 뜨지 않게 한다.
+  const frame = document.createElement("iframe");
+  frame.style.display = "none";
+  frame.src = target.iosApp;
+  document.body.appendChild(frame);
+  window.setTimeout(() => frame.remove(), 2000);
   window.setTimeout(() => {
     document.removeEventListener("visibilitychange", markLeft);
     window.removeEventListener("pagehide", markLeft);
@@ -49,7 +54,7 @@ export function launchApp(target: AppTarget): boolean {
     if (!left && document.visibilityState === "visible") {
       window.location.href = target.iosFallback;
     }
-  }, 1500);
+  }, 2500);
   return true;
 }
 

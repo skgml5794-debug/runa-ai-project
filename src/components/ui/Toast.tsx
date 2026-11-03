@@ -15,7 +15,8 @@ import { TOAST_DURATION_MS } from "@/lib/constants";
 import { useFrameElement } from "../AppFrame";
 
 interface ToastContextValue {
-  show(message: string): void;
+  /** onClick을 주면 토스트를 눌러 동작을 실행할 수 있다. */
+  show(message: string, onClick?: () => void): void;
   /** 표시 중인 토스트를 바로 닫는다. (화면을 벗어날 때 사용) */
   dismiss(): void;
 }
@@ -24,16 +25,16 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const frame = useFrameElement();
-  const [toast, setToast] = useState<{ id: number; message: string } | null>(
+  const [toast, setToast] = useState<{ id: number; message: string; onClick?: () => void } | null>(
     null,
   );
   const timer = useRef<number | undefined>(undefined);
   const counter = useRef(0);
 
-  const show = useCallback((message: string) => {
+  const show = useCallback((message: string, onClick?: () => void) => {
     window.clearTimeout(timer.current);
     counter.current += 1;
-    setToast({ id: counter.current, message });
+    setToast({ id: counter.current, message, onClick });
     timer.current = window.setTimeout(() => setToast(null), TOAST_DURATION_MS);
   }, []);
 
@@ -54,8 +55,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div className="pointer-events-none fixed inset-x-4 bottom-24 min-[431px]:absolute z-40 flex justify-center pb-[env(safe-area-inset-bottom)]">
               <div
                 key={toast.id}
-                role="status"
-                className="animate-toast-in rounded-xl bg-midnight-ink px-4 py-3 text-sm font-medium text-white"
+                role={toast.onClick ? "button" : "status"}
+                onClick={
+                  toast.onClick
+                    ? () => {
+                        const action = toast.onClick;
+                        dismiss();
+                        action?.();
+                      }
+                    : undefined
+                }
+                className={`animate-toast-in rounded-xl bg-midnight-ink/60 px-4 py-3 text-sm font-medium text-white ${
+                  toast.onClick ? "pointer-events-auto cursor-pointer" : ""
+                }`}
               >
                 {toast.message}
               </div>

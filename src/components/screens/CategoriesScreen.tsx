@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyText } from "../ui/EmptyText";
 import { Info } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -12,13 +13,18 @@ import {
   MESSAGES,
 } from "@/lib/constants";
 import { trackBoth } from "@/lib/analytics";
-import { HomeLogoLink } from "../ui/Logo";
 import { countByCategory, formatCount } from "@/lib/notes";
 import type { Category } from "@/lib/types";
 import { useKeepnote } from "../KeepnoteProvider";
 import { Button } from "../ui/Button";
+import { FIELD_LINE } from "../ui/field";
 import { AlertDialog, ConfirmDialog } from "../ui/Dialog";
 import { GripIcon, PencilIcon, TrashIcon } from "../ui/icons";
+
+/** 카테고리가 없을 때 보여주는 예시. 누르면 입력창에 채워진다. */
+const SUGGESTED_CATEGORIES = ["제품정보", "11월 후쿠오카 여행", "청모장소", "분위기 좋은 카페", "맛집추천", "스킨케어"];
+/** 카테고리 고유 색(CATEGORY_COLORS)을 연하게 만든 배경색. 연두는 미색에 가깝게 쓴다. */
+const SUGGESTED_TINTS = ["#e8dcf5", "#dff3e6", "#dde9fb", "#fde6dc", "#f8fadc", "#e8dcf5"];
 
 /** 항목 사이 간격(space-y-3)과 같은 값. 드래그 중 이웃 항목이 밀리는 거리 계산에 쓴다. */
 const ITEM_GAP = 8;
@@ -196,25 +202,23 @@ export function CategoriesScreen() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white">
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-6">
-        <HomeLogoLink />
-
+    <div className="relative flex h-full min-h-0 flex-col bg-white">
+      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6 pt-5">
         <form
-          className="mt-3 flex gap-2"
+          className="flex gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             void addCategory();
           }}
         >
           <input
-            aria-label="새 카테고리 이름"
+            aria-label="새 킵박스 이름"
             value={newName}
             maxLength={CATEGORY_NAME_MAX}
             disabled={atMax}
             placeholder={MESSAGES.categoryNamePlaceholder}
             onChange={(event) => setNewName(event.target.value)}
-            className={`min-h-14 min-w-0 flex-1 rounded-2xl border border-[#e3e7ed] bg-white px-4 text-base outline-none focus:border-slate disabled:opacity-60 ${
+            className={`min-h-14 min-w-0 flex-1 rounded-2xl border px-4 text-base outline-none disabled:opacity-60 ${FIELD_LINE} ${
               addError === "duplicate" ? "ring-2 ring-danger" : ""
             }`}
           />
@@ -232,15 +236,36 @@ export function CategoriesScreen() {
             {MESSAGES.categoryDuplicate}
           </p>
         ) : null}
-        <p className="mt-3 flex items-center gap-1.5 pl-3 text-xs text-[#b4bcc9]">
+        <p className="mt-3 flex items-center gap-1.5 pl-3 text-xs text-[#94a3b8]">
           <Info className="size-3.5 shrink-0" aria-hidden />
           {MESSAGES.categoryTotalMax}
         </p>
 
         {ready && categories.length === 0 ? (
-          <p className="px-2 pt-10 text-center text-sm leading-6 text-slate-deep">
-            {MESSAGES.emptyCategories}
-          </p>
+          <>
+            <div className="flex-1" />
+            {/* 킵노트·카테고리 빈 화면의 문구는 같은 위치(화면 가운데)에 둔다. */}
+            <p className="pointer-events-none absolute inset-x-0 top-[42%] -translate-y-1/2 whitespace-pre-line px-7 text-center text-base leading-6 text-slate-deep">
+              <EmptyText message={MESSAGES.emptyCategories} />
+            </p>
+            <section aria-label="추천 킵박스">
+              <h2 className="text-base font-bold text-midnight-ink">추천 킵박스</h2>
+              <ul className="mt-3 flex flex-wrap gap-1.5">
+                {SUGGESTED_CATEGORIES.map((name, index) => (
+                  <li key={name}>
+                    <button
+                      type="button"
+                      onClick={() => setNewName(name)}
+                      style={{ backgroundColor: SUGGESTED_TINTS[index % SUGGESTED_TINTS.length] }}
+                      className="min-h-9 rounded-full px-4 text-sm text-graphite"
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
         ) : (
           <ul className="mt-6 space-y-2">
             {categories.map((category, index) => {
@@ -260,7 +285,7 @@ export function CategoriesScreen() {
                     else itemRefs.current.delete(category.id);
                   }}
                   style={drag ? { transform: `translateY(${offset}px)` } : undefined}
-                  className={`relative rounded-2xl border border-[#e3e7ed] bg-white px-4 py-3 ${
+                  className={`relative rounded-2xl bg-[#f1f5f9] px-4 py-3 ${
                     dragged ? "z-10 shadow-[0_10px_24px_rgba(31,41,55,0.2)]" : drag ? "transition-transform duration-150" : ""
                   }`}
                 >
@@ -269,7 +294,7 @@ export function CategoriesScreen() {
                       <div className="flex items-center gap-2">
                         <input
                           autoFocus
-                          aria-label="카테고리 이름"
+                          aria-label="킵박스 이름"
                           value={draftName}
                           maxLength={CATEGORY_NAME_MAX}
                           onChange={(event) => setDraftName(event.target.value)}
@@ -284,10 +309,8 @@ export function CategoriesScreen() {
                               cancelRename();
                             }
                           }}
-                          className={`min-h-14 min-w-0 flex-1 rounded-2xl border bg-white px-4 text-base outline-none ${
-                            nameError === "duplicate"
-                              ? "border-danger"
-                              : "border-mist focus:border-slate"
+                          className={`min-h-14 min-w-0 flex-1 rounded-2xl border px-4 text-base outline-none ${
+                            nameError === "duplicate" ? "border-danger bg-white" : FIELD_LINE
                           }`}
                         />
                         <button
@@ -326,7 +349,7 @@ export function CategoriesScreen() {
                         type="button"
                         aria-label="수정"
                         onClick={() => startRename(category)}
-                        className="flex size-9 items-center justify-center rounded-full text-[#b8c0cc]"
+                        className="flex size-9 items-center justify-center rounded-full text-[#aab6c5]"
                       >
                         <PencilIcon className="size-5" />
                       </button>
@@ -334,7 +357,7 @@ export function CategoriesScreen() {
                         type="button"
                         aria-label="삭제"
                         onClick={() => setDeleteTarget(category)}
-                        className="flex size-9 items-center justify-center rounded-full text-[#b8c0cc]"
+                        className="flex size-9 items-center justify-center rounded-full text-[#aab6c5]"
                       >
                         <TrashIcon className="size-5" />
                       </button>
@@ -354,7 +377,7 @@ export function CategoriesScreen() {
                             void moveByKey(index, 1);
                           }
                         }}
-                        className={`flex size-9 touch-none select-none items-center justify-center rounded-full text-[#b8c0cc] ${
+                        className={`flex size-9 touch-none select-none items-center justify-center rounded-full text-[#aab6c5] ${
                           dragged ? "cursor-grabbing" : "cursor-grab"
                         }`}
                       >

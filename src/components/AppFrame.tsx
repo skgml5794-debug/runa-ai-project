@@ -3,6 +3,9 @@
 import { Suspense, createContext, useContext, useState, type ReactNode } from "react";
 import { Analytics } from "./Analytics";
 import { BottomNav } from "./BottomNav";
+import { ClipboardLinkPrompt } from "./ClipboardLinkPrompt";
+import { OnboardingExit } from "./OnboardingExit";
+import { OnboardingGate } from "./OnboardingGate";
 import { KeepnoteProvider } from "./KeepnoteProvider";
 import { ToastProvider } from "./ui/Toast";
 
@@ -23,7 +26,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
   return (
     // 모바일은 문서 자체가 스크롤되어야 Safari 툴바가 스크롤에 맞춰 줄어든다.
     // 데스크톱(431px 이상)은 가운데 고정 크기 프레임 안에서 화면별로 스크롤한다.
-    <div className="flex min-h-dvh justify-center bg-fog min-[431px]:h-dvh min-[431px]:items-center">
+    <div className="flex min-h-dvh justify-center bg-white min-[431px]:h-dvh min-[431px]:items-center min-[431px]:bg-fog">
       <div
         ref={setFrame}
         className="relative flex min-h-dvh w-full max-w-[430px] flex-col bg-white min-[431px]:h-[min(100dvh,880px)] min-[431px]:min-h-0 min-[431px]:overflow-hidden min-[431px]:rounded-[2rem]"
@@ -31,6 +34,11 @@ export function AppFrame({ children }: { children: ReactNode }) {
         <FrameContext.Provider value={frame}>
           <KeepnoteProvider>
             <ToastProvider>
+              <Suspense fallback={null}>
+                <OnboardingGate />
+                <ClipboardLinkPrompt />
+              </Suspense>
+              <OnboardingExit />
               <main className="flex min-h-0 flex-1 flex-col">{children}</main>
               <Suspense fallback={null}>
                 <Analytics />

@@ -4,7 +4,7 @@ type Variant = "primary" | "soft" | "ghost" | "dark" | "danger";
 type Size = "md" | "sm";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-voltage-violet text-white",
+  primary: "bg-brand text-white",
   soft: "bg-fog text-graphite",
   dark: "bg-midnight-ink text-white",
   danger: "bg-danger text-white",

@@ -1,7 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { jsonSchemaOutputFormat } from "@anthropic-ai/sdk/helpers/json-schema";
-import { TITLE_MAX } from "../lib/constants";
+import { CATEGORY_NAME_MAX, TITLE_MAX } from "../lib/constants";
 import type { KeyInfoGroup, SummaryResult } from "../lib/types";
 import { AiFailedError, InsufficientContentError, NotConfiguredError } from "./errors";
 import type { PostMeta } from "./post-meta";
@@ -25,6 +25,7 @@ const SYSTEM_PROMPT = `당신은 소셜 미디어 게시물을 한국어로 정�
   핵심 정보만 추려 명사형·단문형으로 씁니다. 예: "구매하지 못함", "제품 소개", "얼음 12시간 유지, 세척은 베이킹소다".
 - products: 글에 나온 제품명, 브랜드명, 모델명. 원문에 쓰인 표기 그대로 옮기고 줄이거나 바꾸거나 번역하지 마세요. 없으면 빈 배열.
 - places: 글에 나온 장소. 없으면 빈 배열.
+- category: 이 글을 담아두기에 알맞은 분류 이름 하나. 내용에 맞게 1~5자 한국어 명사로 씁니다. 제품 중심이면 "제품", 추천 위주면 "추천", 장소 위주면 "장소", 방법·노하우 위주면 "Tip", 요리면 "레시피"처럼 글의 성격을 나타내고, 어디에도 맞지 않으면 빈 문자열.
 - tips: 글에 나온 방법과 노하우를 항목별로 나눈 배열. 한 항목에는 한 가지 내용만 담고, 쉼표로 여러 개를 나열하거나 긴 문장으로 쓰지 마세요. "~선택하면 됩니다" 대신 "~선택"처럼 간결한 명사형·단문형으로 씁니다. 서로 겹치는 항목은 하나로 합치고 최대 5개. 없으면 빈 배열.`;
 
 const OUTPUT_SCHEMA = {
@@ -36,8 +37,9 @@ const OUTPUT_SCHEMA = {
     products: { type: "array", items: { type: "string" } },
     places: { type: "array", items: { type: "string" } },
     tips: { type: "array", items: { type: "string" } },
+    category: { type: "string" },
   },
-  required: ["sufficient", "title", "summary", "products", "places", "tips"],
+  required: ["sufficient", "title", "summary", "products", "places", "tips", "category"],
   additionalProperties: false,
 } as const;
 
@@ -48,6 +50,7 @@ export interface ClaudeOutput {
   products: string[];
   places: string[];
   tips: string[];
+  category?: string;
 }
 
 /** 대소문자와 공백 차이를 무시하고 비교하기 위한 정규화 */
@@ -62,7 +65,7 @@ function normalize(value: string): string {
 export function validateOutput(
   output: ClaudeOutput | null,
   source: string,
-): Pick<SummaryResult, "title" | "summaryLines" | "keyInfo"> {
+): Pick<SummaryResult, "title" | "summaryLines" | "keyInfo" | "suggestedCategory"> {
   if (!output || !output.sufficient) throw new InsufficientContentError();
 
   const title = output.title.trim().slice(0, TITLE_MAX);
@@ -81,7 +84,13 @@ export function validateOutput(
     { label: "장소", items: places },
     { label: "Tip", items: tips },
   ].filter((group) => group.items.length > 0);
-  return { title, summaryLines: [summary], keyInfo };
+  const suggestedCategory = (output.category ?? "").trim().slice(0, CATEGORY_NAME_MAX);
+  return {
+    title,
+    summaryLines: [summary],
+    keyInfo,
+    ...(suggestedCategory !== "" && { suggestedCategory }),
+  };
 }
 
 export interface MessagesClient {

@@ -7,7 +7,7 @@ import { useId, type ReactNode, type SVGProps } from "react";
  */
 const OUTLINE = 1.6;
 
-function SolidIcon({
+export function SolidIcon({
   shape,
   cuts,
   ...props
@@ -37,7 +37,7 @@ function SolidIcon({
 }
 
 /** 라인(파낸 부분): 두께 2, 끝은 둥글게 */
-function Line({ x, y, w }: { x: number; y: number; w: number }) {
+export function Line({ x, y, w }: { x: number; y: number; w: number }) {
   return <rect x={x} y={y} width={w} height={2} rx={1} stroke="none" />;
 }
 

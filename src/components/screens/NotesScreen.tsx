@@ -1,12 +1,12 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { EmptyText } from "../ui/EmptyText";
+import { ArrowRight, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { HomeLogoLink } from "../ui/Logo";
 import { categoryProp, trackBoth } from "@/lib/analytics";
 import { categoryColor } from "@/lib/category-colors";
-import { MESSAGES } from "@/lib/constants";
+import { MESSAGES, SAMPLE_LINK_LABEL, SAMPLE_NOTE } from "@/lib/constants";
 import {
   UNCATEGORIZED_ID,
   countByCategory,
@@ -20,6 +20,7 @@ import { SESSION_KEYS, setSession } from "@/lib/session";
 import { useKeepnote } from "../KeepnoteProvider";
 import { NoteCard } from "../note/NoteCard";
 import { Chip } from "../ui/Chip";
+import { FIELD_LINE_WITHIN } from "../ui/field";
 
 /**
  * 킵노트 화면. 검색어·정렬·선택한 카테고리는 URL 쿼리에 보관해
@@ -173,16 +174,15 @@ export function NotesScreen() {
   // 카테고리 칩은 선택된 것만 고유 색, 나머지는 연한 회색 라인으로 보여준다. (전체를 골라도 동일)
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="relative flex min-h-0 flex-1 flex-col">
       <div
         className="sticky z-10 shrink-0 bg-white px-5 pb-3 transition-[top] duration-200"
         // 아래로 스크롤하면 로고·검색 영역이 위로 접히고 카테고리만 남는다. (모바일 문서 스크롤 기준)
         style={{ top: collapsed ? -Math.max(collapseHeight - 8, 0) : 0 }}
       >
-        <div ref={collapseRef} className="space-y-3 pb-3.5 pt-6">
-        <HomeLogoLink />
+        <div ref={collapseRef} className="space-y-3 pb-3.5 pt-5">
         <div className="flex items-center gap-2">
-          <label className="flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-2xl border border-[#e3e7ed] bg-white px-4">
+          <label className={`flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-2xl border px-4 transition-colors ${FIELD_LINE_WITHIN}`}>
             <Search className="size-5 shrink-0 text-placeholder" aria-hidden />
             <input
               type="search"
@@ -213,7 +213,7 @@ export function NotesScreen() {
                   setText("");
                   updateParams({ q: null });
                 }}
-                className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#c9cfd9] text-white"
+                className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#c3cedb] text-white"
               >
                 <X className="size-3" strokeWidth={3} aria-hidden />
               </button>
@@ -223,7 +223,8 @@ export function NotesScreen() {
 
         </div>
 
-        <section aria-label="카테고리">
+        {ready && notes.length === 0 ? null : (
+        <section aria-label="킵박스">
           <div className="no-scrollbar -mx-5 flex gap-1.5 overflow-x-auto px-5">
             <Chip
               compact
@@ -270,13 +271,40 @@ export function NotesScreen() {
             ) : null}
           </div>
         </section>
+        )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-1">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6 pt-1">
         {emptyMessage ? (
-          <p className="px-2 pt-12 text-center text-sm leading-6 text-slate-deep">
-            {emptyMessage}
-          </p>
+          <>
+            <div className="flex-1" />
+            {/* 킵노트·카테고리 빈 화면의 문구는 같은 위치(화면 가운데)에 둔다. */}
+            <p className="pointer-events-none absolute inset-x-0 top-[42%] -translate-y-1/2 whitespace-pre-line px-7 text-center text-base leading-6 text-slate-deep">
+              <EmptyText message={emptyMessage} />
+            </p>
+            {notes.length === 0 ? (
+              <section aria-label="요약 체험하기">
+                <h2 className="text-base font-bold text-midnight-ink">요약 체험하기</h2>
+                <div className="mt-3 flex gap-2">
+                  <p className="flex min-h-14 min-w-0 flex-1 items-center rounded-2xl border border-[#e5e9ef] bg-white px-4 text-base text-midnight-ink shadow-subtle">
+                    <span className="truncate">{SAMPLE_LINK_LABEL}</span>
+                  </p>
+                  <button
+                    type="button"
+                    aria-label="예시 링크로 요약하기"
+                    onClick={() => {
+                      // 실제 사용자와 같은 순서(로딩 → 요약 결과 → 저장)로 체험한다.
+                      setSession(SESSION_KEYS.pendingUrl, SAMPLE_NOTE.url);
+                      router.push("/loading");
+                    }}
+                    className="flex h-14 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white"
+                  >
+                    <ArrowRight className="size-[18.4px]" aria-hidden />
+                  </button>
+                </div>
+              </section>
+            ) : null}
+          </>
         ) : (
           <ul
             className="space-y-2"

@@ -1,47 +1,43 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowUp, ChevronRight, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { linkType, secondsSince, trackBoth } from "@/lib/analytics";
 import { MESSAGES } from "@/lib/constants";
-import { parseLink } from "@/lib/link";
 import { launchApp } from "@/lib/open-app";
-import { useOnboarded } from "@/lib/onboarding";
+import { consumeArrivalFromOnboarding } from "@/lib/onboarding";
+import { SERVICES } from "@/lib/services";
+import { parseLink } from "@/lib/link";
 import { SESSION_KEYS, setSession, useSessionValue } from "@/lib/session";
 import { HomeLogoLink } from "../ui/Logo";
-import { Sparkle } from "../ui/Sparkle";
+import { InstagramIcon, ThreadsIcon } from "../ui/icons";
+import { ItemArt, PlaceArt, TipArt } from "../ui/HomeArt";
 import { AlertDialog } from "../ui/Dialog";
+import { ScopeSheet } from "../ui/ScopeSheet";
 
-const SERVICES = [
-  {
-    label: "Instagram",
-    web: "https://www.instagram.com",
-    app: {
-      androidIntent: "intent://www.instagram.com/#Intent;scheme=https;package=com.instagram.android;end",
-      iosApp: "instagram://app",
-      iosFallback: "https://apps.apple.com/app/instagram/id389801252",
-    },
-  },
-  {
-    label: "Threads",
-    web: "https://www.threads.com",
-    app: {
-      androidIntent: "intent://www.threads.com/#Intent;scheme=https;package=com.instagram.barcelona;end",
-      iosApp: "barcelona://",
-      iosFallback: "https://apps.apple.com/app/threads/id6446901002",
-    },
-  },
+const GUIDES = [
+  { title: "가보고 싶은 곳", description: "맛집 · 카페 · 여행지", Art: PlaceArt },
+  { title: "추천 받은 아이템", description: "옷 · 신발 · 생활용품", Art: ItemArt },
+  { title: "나중에 써먹을 팁", description: "생활 꿀팁 · 레시피 · 노하우", Art: TipArt },
 ] as const;
 
 export function HomeScreen() {
   const router = useRouter();
-  const onboarded = useOnboarded();
   // 오류가 나거나 로딩 중 뒤로 돌아와도 입력한 링크를 유지한다.
   const link = useSessionValue(SESSION_KEYS.homeLink);
   // 안내 팝업 문구. null이면 닫힘.
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [scopeOpen, setScopeOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // 시작하기에서 넘어온 직후에만 홈이 서서히 나타난다.
+  useLayoutEffect(() => {
+    if (consumeArrivalFromOnboarding()) rootRef.current?.classList.add("animate-fade-in");
+  }, []);
   const submitting = useRef(false);
+  // 화면을 열 때 이미 들어 있던(오류 뒤 복원된) 링크였는지
+  const prefilled = useRef(link.trim() !== "");
   // 붙여넣기로 입력했는지 (입력창 onPaste)
   const pasted = useRef(false);
   // 입력을 시작한 시각. null이면 아직 입력하지 않았다.
@@ -68,18 +64,13 @@ export function HomeScreen() {
     };
   }, []);
 
-  // 처음 방문이면 홈 대신 온보딩을 먼저 보여준다.
-  useEffect(() => {
-    if (onboarded === false) router.replace("/onboarding");
-  }, [onboarded, router]);
-
-  // 홈이 실제로 보일 때(온보딩을 마친 사용자) 마운트당 한 번만 기록한다. 퍼널의 시작 단계.
+  // 홈이 보일 때 마운트당 한 번만 기록한다. 퍼널의 시작 단계.
   const viewedSent = useRef(false);
   useEffect(() => {
-    if (!onboarded || viewedSent.current) return;
+    if (viewedSent.current) return;
     viewedSent.current = true;
     trackBoth("Home Viewed");
-  }, [onboarded]);
+  }, []);
 
   const canSubmit = link.trim() !== "";
 
@@ -106,98 +97,135 @@ export function HomeScreen() {
     trackBoth("Link Submitted", {
       link_type: linkType(parsed.source),
       input_method: pasted.current ? "paste" : "type",
+      // 오류 뒤 복원된 링크를 이어서 제출한 경우와 새로 입력한 경우를 구분한다.
+      prefilled: prefilled.current,
     });
     setSession(SESSION_KEYS.pendingUrl, parsed.url);
     router.push("/loading");
   };
 
-  if (!onboarded) return <div className="min-h-0 flex-1 bg-[#f4f6f9]" />;
-
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#f4f6f9]">
-      <header className="relative z-10 shrink-0 px-5 pt-6">
-        <HomeLogoLink />
+    <div
+      ref={rootRef}
+      className="relative flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#ffffff]"
+    >
+      <header className="relative z-10 flex shrink-0 items-center justify-between px-5 pt-3">
+        <HomeLogoLink tone="bg-placeholder" />
+        <div className="flex items-center gap-1">
+          {SERVICES.map((service) => (
+            <a
+              key={service.key}
+              href={service.web}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${service.label} 열기`}
+              onClick={(event) => {
+                // 모바일이면 앱을 먼저 열고, 그 외(데스크톱)는 기본 동작(새 탭)을 따른다.
+                if (launchApp(service.app)) event.preventDefault();
+              }}
+              className="flex size-10 items-center justify-center rounded-full"
+            >
+              {service.key === "instagram" ? (
+                <InstagramIcon className="size-[22px] text-placeholder" />
+              ) : (
+                <ThreadsIcon className="size-[22px] text-placeholder" />
+              )}
+            </a>
+          ))}
+        </div>
       </header>
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 text-center">
+        <h1 className="whitespace-pre-line font-display text-[32px] font-bold leading-[46px] tracking-[-0.2px] text-voltage-violet">
+          {MESSAGES.homeHeadline}
+        </h1>
+      </div>
+      <button
+        type="button"
+        onClick={() => setScopeOpen(true)}
+        className="relative z-10 ml-6 mr-5 flex min-h-9 w-fit shrink-0 items-center gap-1 text-base text-graphite"
+      >
+        {MESSAGES.homeScope}
+        <ChevronRight className="size-4 text-placeholder" aria-hidden />
+      </button>
+      <ul className="no-scrollbar relative z-10 flex shrink-0 snap-x scroll-px-5 gap-3 overflow-x-auto px-5 pb-3 pt-2">
+        {GUIDES.map(({ title, description, Art }) => (
+          <li
+            key={title}
+            className="flex min-h-[132px] w-[56%] shrink-0 snap-start flex-col justify-between rounded-[20px] bg-white p-4 shadow-[0_6px_24px_rgba(21,25,36,0.10)]"
+          >
+            <Art />
+            <div>
+              <p className="text-base font-bold tracking-[-0.01em] text-midnight-ink">{title}</p>
+              <p className="mt-1 text-[13px] leading-5 text-placeholder">{description}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
       <form
-        className="relative z-10 flex flex-1 flex-col justify-center gap-6 px-5 pb-6"
+        className="relative z-10 shrink-0 px-5 pb-5"
         onSubmit={(event) => {
           event.preventDefault();
           submit();
         }}
       >
-        <div className="flex flex-col items-center space-y-3 text-center">
-          <Sparkle className="size-10" float spread />
-          <p className="text-base text-graphite">
-            링크만 넣으면 핵심만 추려서 저장해요
-          </p>
-          <h1 className="-mt-1.5 font-display text-[2rem] font-extrabold leading-[1.2] tracking-[-0.3px] text-voltage-violet">
-            {MESSAGES.homeHeadline}
-          </h1>
-        </div>
-        <div>
-          <div className="flex gap-2">
-            <input
-              aria-label="Instagram 또는 Threads 링크"
-              inputMode="url"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              value={link}
-              onPaste={() => {
-                pasted.current = true;
-                lastStep.current = "pasted";
-              }}
-              onChange={(event) => {
-                if (event.target.value.trim() !== "") {
-                  // 입력창을 열기만 한 것은 제외하고, 내용이 생긴 첫 순간에 한 번만 기록한다.
-                  // prefilled: 오류 뒤 복원된 링크를 이어서 고치는 경우라 새 입력과 구분한다.
-                  if (typingStartedAt.current === null) {
-                    typingStartedAt.current = Date.now();
-                    trackBoth("Link Input Started", {
-                      input_method: pasted.current ? "paste" : "type",
-                      prefilled: link.trim() !== "",
-                    });
-                  }
-                  abandonDone.current = false;
-                  if (lastStep.current === "invalid_link") {
-                    lastStep.current = pasted.current ? "pasted" : "typing";
-                  }
+        <div className="relative">
+          <input
+            ref={inputRef}
+            aria-label="Instagram 또는 Threads 링크"
+            inputMode="url"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            value={link}
+            onPaste={() => {
+              pasted.current = true;
+              lastStep.current = "pasted";
+            }}
+            onChange={(event) => {
+              if (event.target.value.trim() !== "") {
+                // 입력창을 열기만 한 것은 제외하고, 내용이 생긴 첫 순간에 한 번만 기록한다.
+                // prefilled: 오류 뒤 복원된 링크를 이어서 고치는 경우라 새 입력과 구분한다.
+                if (typingStartedAt.current === null) typingStartedAt.current = Date.now();
+                abandonDone.current = false;
+                if (lastStep.current === "invalid_link") {
+                  lastStep.current = pasted.current ? "pasted" : "typing";
                 }
-                setSession(SESSION_KEYS.homeLink, event.target.value);
-              }}
-              placeholder="인스타그램 또는 스레드 링크를 붙여넣어 주세요"
-              className="min-h-14 min-w-0 flex-1 text-ellipsis rounded-2xl border border-[#e3e7ed] bg-white px-4 text-base outline-none placeholder:text-[15px] focus:border-slate"
-            />
+              }
+              setSession(SESSION_KEYS.homeLink, event.target.value);
+            }}
+            placeholder={MESSAGES.homeLinkPlaceholder}
+            className={`min-h-14 w-full text-ellipsis rounded-2xl bg-fog pl-4 text-base outline-none placeholder:text-[15px] ${
+              link !== "" ? "pr-[5.5rem]" : "pr-16"
+            }`}
+          />
+          <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-2">
+            {link !== "" ? (
+              <button
+                type="button"
+                aria-label="입력 지우기"
+                // 입력창의 포커스를 잃지 않게 한다.
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setSession(SESSION_KEYS.homeLink, "");
+                  inputRef.current?.focus();
+                }}
+                className="flex size-5 items-center justify-center rounded-full bg-[#c3cedb] text-white"
+              >
+                <X className="size-3" strokeWidth={3} aria-hidden />
+              </button>
+            ) : null}
             <button
               type="submit"
               aria-label="요약하기"
-              className="flex h-14 w-12 shrink-0 items-center justify-center rounded-2xl bg-voltage-violet text-white"
+              className="flex size-10 items-center justify-center rounded-full bg-voltage-violet text-white"
             >
-              <ArrowRight className="size-[18.4px]" aria-hidden />
+              <ArrowUp className="size-5" strokeWidth={2.4} aria-hidden />
             </button>
           </div>
         </div>
       </form>
-      <nav aria-label="바로가기" className="relative z-10 grid shrink-0 grid-cols-2 pb-2">
-        {SERVICES.map((service) => (
-          <a
-            key={service.label}
-            href={service.web}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(event) => {
-              // 모바일이면 앱을 먼저 열고, 그 외(데스크톱)는 기본 동작(새 탭)을 따른다.
-              if (launchApp(service.app)) event.preventDefault();
-            }}
-            // 화면 가로를 반으로 나눈 각 칸의 가운데에 (화살표 + 글자)를 둔다.
-            className="flex min-h-11 items-center justify-center gap-1 text-[15px] font-medium leading-none text-slate-deep"
-          >
-            <ArrowUpRight className="size-[18px] shrink-0" aria-hidden />
-            {service.label}
-          </a>
-        ))}
-      </nav>
 
+      {scopeOpen ? <ScopeSheet onClose={() => setScopeOpen(false)} /> : null}
       {alertMessage ? (
         <AlertDialog
           message={alertMessage}

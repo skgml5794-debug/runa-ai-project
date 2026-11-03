@@ -12,6 +12,7 @@ export function Thumbnail({
   src,
   href,
   showArrow = false,
+  compact = false,
 }: {
   /** 이미지가 없을 때 보여줄 출처 앱 아이콘 */
   source: Source;
@@ -19,13 +20,17 @@ export function Thumbnail({
   href?: string;
   /** 원문 이동 화살표 표시 (Threads). 이미지가 없으면 출처와 관계없이 항상 표시한다. */
   showArrow?: boolean;
+  /** 요약 완료 화면용 작은 썸네일 (84px, 왼쪽 정렬) */
+  compact?: boolean;
 }) {
   // 외부 썸네일 주소가 만료되어 불러오지 못하면 기본 이미지로 대체한다.
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showImage = src !== null && src !== failedSrc;
   const SourceIcon = source === "Threads" ? ThreadsIcon : InstagramIcon;
   const box = (
-    <div className="relative mx-auto flex size-36 items-center justify-center overflow-hidden rounded-[1rem] border border-[#eceff3] bg-fog">
+    <div className={`relative flex items-center justify-center overflow-hidden border border-[#e9eef4] bg-fog ${
+        compact ? "size-[84px] shrink-0 rounded-[17px]" : "mx-auto size-36 rounded-3xl"
+      }`}>
       {showImage ? (
         // 원본 썸네일은 임의의 외부 도메인이라 next/image 최적화 대상이 아니다.
         // eslint-disable-next-line @next/next/no-img-element
@@ -39,7 +44,7 @@ export function Thumbnail({
         />
       ) : (
         <SourceIcon
-          className="size-16 text-[#d5dbe3]"
+          className="size-16 text-[#d5dde8]"
           aria-label={`${source} 아이콘`}
         />
       )}
@@ -64,13 +69,14 @@ export function Thumbnail({
       onClick={(event) => {
         // iOS의 Threads는 게시물 전용 앱 주소가 공개돼 있지 않아서, 링크를 직접 누른 것처럼 같은 탭에서
         // 열리게 둔다. (앱이 처리하는 https 주소이고, 앱이 없으면 브라우저로 열린다.)
+        // Instagram은 앱 전용 주소로 게시물을 바로 연다. (아래 openPostInApp)
         if (isIOS() && source === "Threads") {
           event.currentTarget.target = "_self";
           return;
         }
         if (openPostInApp(href, source)) event.preventDefault();
       }}
-      className="mx-auto block w-fit rounded-[1rem]"
+      className={`block w-fit shrink-0 ${compact ? "rounded-[17px]" : "mx-auto rounded-3xl"}`}
     >
       {box}
     </a>
@@ -82,11 +88,26 @@ export function MetaLine({
   source,
   authorId,
   dateLabel,
+  stacked = false,
 }: {
   source: Source;
   authorId: string;
   dateLabel: string;
+  /** 출처·작성자·날짜를 세 줄로 왼쪽 정렬 (요약 완료 화면) */
+  stacked?: boolean;
 }) {
+  const parts = [source, authorId && authorId !== "unknown" ? `@${authorId}` : "Unknown", dateLabel];
+  if (stacked) {
+    return (
+      <div className="min-w-0 space-y-1 text-sm text-slate">
+        {parts.map((part) => (
+          <p key={part} className="truncate">
+            {part}
+          </p>
+        ))}
+      </div>
+    );
+  }
   return (
     <p className="text-center text-sm text-slate">
       {[source, authorId && authorId !== "unknown" ? `@${authorId}` : "Unknown", dateLabel].join(" · ")}
@@ -94,9 +115,19 @@ export function MetaLine({
   );
 }
 
+/** 섹션 제목 아래의 작은 안내 문구 */
+export function SectionNote({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex gap-1.5 whitespace-pre-line text-[13px] leading-[1.5] text-slate">
+      <span aria-hidden className="mt-[0.65em] size-[3px] shrink-0 rounded-full bg-slate" />
+      {children}
+    </p>
+  );
+}
+
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="flex items-center gap-1.5 text-base font-bold text-midnight-ink">
+    <h2 className="flex items-center gap-1.5 text-[19px] font-bold tracking-[-0.02em] text-midnight-ink">
       {children}
     </h2>
   );
@@ -148,7 +179,7 @@ export function KeyInfoPanel({ groups }: { groups: KeyInfoGroup[] }) {
     <section aria-labelledby="key-info-title" className="space-y-2">
       <h2
         id="key-info-title"
-        className="flex items-center gap-1.5 text-base font-bold text-midnight-ink"
+        className="flex items-center gap-1.5 text-[19px] font-bold tracking-[-0.02em] text-midnight-ink"
       >
         핵심 정보
       </h2>

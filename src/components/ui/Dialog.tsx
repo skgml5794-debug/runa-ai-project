@@ -9,11 +9,13 @@ interface DialogShellProps {
   message: ReactNode;
   /** ESC를 눌렀을 때 실행한다. 확인 전용 팝업은 확인, 선택 팝업은 취소와 같다. */
   onEscape(): void;
+  /** 메시지와 버튼 사이에 두는 보조 동작 */
+  extra?: ReactNode;
   children: ReactNode;
 }
 
 /** 앱 프레임 안에 뜨는 팝업. 열릴 때 첫 버튼에 포커스를 주고 포커스가 팝업 밖으로 나가지 않게 한다. */
-function DialogShell({ message, onEscape, children }: DialogShellProps) {
+function DialogShell({ message, onEscape, extra, children }: DialogShellProps) {
   const frame = useFrameElement();
   const panel = useRef<HTMLDivElement>(null);
   const handleEscape = useEffectEvent(onEscape);
@@ -62,6 +64,7 @@ function DialogShell({ message, onEscape, children }: DialogShellProps) {
         <p className="whitespace-pre-line px-6 text-center text-base leading-relaxed text-midnight-ink">
           {message}
         </p>
+        {extra ? <div className="mt-4 flex justify-center">{extra}</div> : null}
         <div className="mt-6 flex gap-3">{children}</div>
       </div>
     </div>,
@@ -99,16 +102,33 @@ export function ConfirmDialog({
 interface AlertDialogProps {
   message: ReactNode;
   confirmLabel?: string;
+  /** 메시지 아래에 보이는 보조 버튼 */
+  secondary?: { label: string; onClick(): void };
   onConfirm(): void;
 }
 
 export function AlertDialog({
   message,
   confirmLabel = "확인",
+  secondary,
   onConfirm,
 }: AlertDialogProps) {
   return (
-    <DialogShell message={message} onEscape={onConfirm}>
+    <DialogShell
+      message={message}
+      onEscape={onConfirm}
+      extra={
+        secondary ? (
+          <button
+            type="button"
+            onClick={secondary.onClick}
+            className="h-10 rounded-full border border-mist px-5 text-sm text-graphite"
+          >
+            {secondary.label}
+          </button>
+        ) : null
+      }
+    >
       <Button variant="primary" size="sm" className="flex-1" onClick={onConfirm}>
         {confirmLabel}
       </Button>

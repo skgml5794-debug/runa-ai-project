@@ -43,7 +43,7 @@ const ENTITIES: Record<string, string> = {
   nbsp: " ",
 };
 
-function decodeEntities(value: string): string {
+export function decodeEntities(value: string): string {
   return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
     if (entity[0] === "#") {
       const code =
@@ -129,7 +129,7 @@ export function buildPostMeta(
   };
 }
 
-async function readLimited(response: Response, limit: number): Promise<string> {
+export async function readLimited(response: Response, limit: number): Promise<string> {
   const reader = response.body?.getReader();
   if (!reader) return "";
   const decoder = new TextDecoder();

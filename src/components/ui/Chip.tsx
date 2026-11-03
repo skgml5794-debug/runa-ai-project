@@ -15,8 +15,8 @@ const CHIP_BASE =
   "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-medium";
 const CHIP_SIZE = "min-h-11 px-4 text-sm";
 const CHIP_SIZE_COMPACT = "min-h-10 px-3.5 text-[13px]";
-const CHIP_SELECTED = "border border-voltage-violet bg-voltage-violet text-white";
-const CHIP_IDLE = "border border-mist bg-white text-graphite";
+const CHIP_SELECTED = "border border-brand bg-brand text-white";
+const CHIP_IDLE = "border border-transparent bg-fog text-graphite";
 
 /** 필터·선택용 칩. 선택 상태만 보라색으로 구분하고 카테고리별 색은 쓰지 않는다. */
 export function Chip({

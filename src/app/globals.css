@@ -2,29 +2,31 @@
 
 /* DESIGN.md의 Keepnote 적용 가이드 토큰 */
 @theme {
-  --color-voltage-violet: #374151;
-  --color-ultra-violet: #1f2937;
-  --color-lavender-mist: #9aa7b8;
-  --color-orchid-wash: #b8c2d0;
-  --color-midnight-ink: #111827;
-  --color-graphite: #3f4654;
-  --color-slate: #6b7589;
-  --color-slate-deep: #5f6b80;
+  /* 메인 컬러 */
+  --color-brand: #151924;
+  --color-voltage-violet: #151924;
+  --color-ultra-violet: #151924;
+  --color-lavender-mist: #a3b1c2;
+  --color-orchid-wash: #c3cedb;
+  --color-midnight-ink: #151924;
+  --color-graphite: #3b4556;
+  --color-slate: #64748b;
+  --color-slate-deep: #5b6778;
   --color-fog: #f1f5f9;
-  --color-fog-soft: #f8f9fb;
-  --color-placeholder: #98a1b1;
-  --color-fog-hover: #e6eaf0;
+  --color-fog-soft: #f8fafc;
+  --color-placeholder: #94a3b8;
+  --color-fog-hover: #e6ebf2;
   --color-mist: #d8e0ea;
   --color-mint-wash: #d6fcf4;
   --color-lavender-field: #e5e9ef;
   --color-danger: #dc2626;
   --color-danger-wash: #fef2f2;
 
-  /* 모서리 둥글기: 버튼·입력창·박스 공통. 기본값보다 2px 정도 줄였다. */
+  /* 모서리 둥글기: 버튼·입력창·박스·카드는 모두 같은 값(20px)으로 통일한다. */
   --radius-lg: 0.4375rem;
-  --radius-xl: 0.625rem;
-  --radius-2xl: 0.875rem;
-  --radius-3xl: 1.375rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.125rem;
+  --radius-3xl: 1.125rem;
 
   --font-sans: "Pretendard Variable", Pretendard, ui-sans-serif, system-ui,
     -apple-system, sans-serif;
@@ -33,6 +35,9 @@
 
   --animate-toast-in: toast-in 200ms ease-out;
   --animate-dialog-in: dialog-in 160ms ease-out;
+  --animate-fade-in: fade-in 300ms ease-out;
+  --animate-loading-bar: loading-bar 8s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  --animate-fade-out: fade-out 300ms ease-out forwards;
   --animate-orb-drift: orb-drift 8s ease-in-out infinite;
   --animate-float-a: float-a 3.2s ease-in-out infinite;
   --animate-float-b: float-b 2.3s ease-in-out -0.9s infinite;
@@ -45,6 +50,30 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  @keyframes loading-bar {
+    from {
+      width: 0;
+    }
+    to {
+      width: 92%;
+    }
+  }
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
     }
   }
   @keyframes dialog-in {
@@ -101,14 +130,14 @@
   }
 
   body {
-    background: var(--color-fog);
+    background: #fff;
     color: var(--color-midnight-ink);
   }
 
   /* 스크롤바는 연한 회색의 얇은 막대로 */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #d5dbe5 transparent;
+    scrollbar-color: #cbd5e1 transparent;
   }
 
   ::-webkit-scrollbar {
@@ -121,7 +150,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #d5dbe5;
+    background: #cbd5e1;
     border-radius: 999px;
   }
 
@@ -140,7 +169,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-voltage-violet);
+    outline: 2px solid var(--color-brand);
     outline-offset: 2px;
   }
 }

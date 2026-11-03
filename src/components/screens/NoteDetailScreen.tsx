@@ -79,7 +79,7 @@ export function NoteDetailScreen() {
           type="button"
           aria-label="뒤로가기"
           onClick={() => router.push(notesListHref())}
-          className="flex size-11 items-center justify-center rounded-full text-midnight-ink"
+          className="relative flex size-11 items-center justify-center rounded-full text-midnight-ink"
         >
           <ChevronLeft className="size-6" aria-hidden />
         </button>
@@ -89,14 +89,52 @@ export function NoteDetailScreen() {
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((open) => !open)}
-          className="flex size-11 items-center justify-center rounded-full text-midnight-ink"
+          className="relative flex size-11 items-center justify-center rounded-full text-midnight-ink"
         >
           <Ellipsis className="size-6" aria-hidden />
         </button>
+        {menuOpen ? (
+          <>
+              <button
+                type="button"
+                aria-label="메뉴 닫기"
+                tabIndex={-1}
+                onClick={() => setMenuOpen(false)}
+                className="fixed inset-0 cursor-default"
+              />
+              <div
+                role="menu"
+                className="absolute right-4 top-[3.75rem] w-36 overflow-hidden rounded-2xl border border-mist bg-white py-1"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    router.push(`/notes/${note.id}/edit`);
+                  }}
+                  className="flex min-h-11 w-full items-center px-4 text-left text-base text-midnight-ink hover:bg-fog"
+                >
+                  수정
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setConfirmOpen(true);
+                  }}
+                  className="flex min-h-11 w-full items-center px-4 text-left text-base text-midnight-ink hover:bg-fog"
+                >
+                  삭제
+                </button>
+              </div>
+          </>
+        ) : null}
       </header>
 
       <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-5 pb-8 pt-2">
-        <div className="mb-7 space-y-4 border-b border-[#e9edf2] pb-7">
+        <div className="space-y-4 pb-1">
           <Thumbnail
             source={note.source}
             src={note.thumbnailUrl}
@@ -115,6 +153,9 @@ export function NoteDetailScreen() {
           </div>
         </div>
 
+        {/* 구분선 대신 가로 전체를 채우는 면으로 영역을 나눈다. */}
+        <div aria-hidden className="-mx-5 h-2 bg-fog" />
+
         {note.summaryLines.length > 0 ? (
           <section className="space-y-1.5">
             <SectionTitle>AI 요약</SectionTitle>
@@ -126,7 +167,7 @@ export function NoteDetailScreen() {
 
         {noteCategories.length > 0 ? (
           <section className="space-y-2">
-            <SectionTitle>카테고리</SectionTitle>
+            <SectionTitle>킵박스</SectionTitle>
             <div className="flex flex-wrap gap-2">
               {noteCategories.map((category) => (
                 <StaticChip key={category.id} tone={categoryColor(categories.indexOf(category))}>
@@ -137,45 +178,6 @@ export function NoteDetailScreen() {
           </section>
         ) : null}
       </div>
-
-      {menuOpen ? (
-        <>
-          <button
-            type="button"
-            aria-label="메뉴 닫기"
-            tabIndex={-1}
-            onClick={() => setMenuOpen(false)}
-            className="absolute inset-0 z-10 cursor-default"
-          />
-          <div
-            role="menu"
-            className="absolute right-4 top-[4.75rem] z-20 w-36 overflow-hidden rounded-2xl border border-mist bg-white py-1"
-          >
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setMenuOpen(false);
-                router.push(`/notes/${note.id}/edit`);
-              }}
-              className="flex min-h-11 w-full items-center px-4 text-left text-base text-midnight-ink hover:bg-fog"
-            >
-              수정
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setMenuOpen(false);
-                setConfirmOpen(true);
-              }}
-              className="flex min-h-11 w-full items-center px-4 text-left text-base text-midnight-ink hover:bg-fog"
-            >
-              삭제
-            </button>
-          </div>
-        </>
-      ) : null}
 
       {confirmOpen ? (
         <ConfirmDialog

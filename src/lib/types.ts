@@ -16,6 +16,8 @@ export interface SummaryResult {
   /** 핵심 요약 3~6줄 */
   summaryLines: string[];
   keyInfo: KeyInfoGroup[];
+  /** AI가 내용에 맞게 추천한 킵박스 이름. 저장 전 요약 화면에서만 쓴다. */
+  suggestedCategory?: string;
   /** 검색 대상으로만 보관하며 화면에는 표시하지 않는다. */
   originalText: string;
 }

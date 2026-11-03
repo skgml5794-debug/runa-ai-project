@@ -16,11 +16,12 @@ import { addPendingCancel, removePendingCancel, type CancelReason } from "@/lib/
 import { summarizer } from "@/lib/summarizer";
 import { SummarizeError } from "@/lib/summarizer/claude";
 import { AlertDialog } from "../ui/Dialog";
-import { Sparkle } from "../ui/Sparkle";
+import { ScopeSheet } from "../ui/ScopeSheet";
 
 export function LoadingScreen() {
   const router = useRouter();
   const [failure, setFailure] = useState<"insufficient" | "failed" | null>(null);
+  const [scopeOpen, setScopeOpen] = useState(false);
   // 성공·실패 이벤트가 이미 기록됐으면 true. 이후 화면을 벗어나는 것은 취소가 아니다.
   const settled = useRef(false);
   const cancelReported = useRef(false);
@@ -79,11 +80,6 @@ export function LoadingScreen() {
         settled.current = true;
         removePendingCancel(attemptId);
         setSession(SESSION_KEYS.pendingUrl, "");
-        // 요약 생성 성공. 기존 link_submission_succeeded를 대체해 같은 순간에 두 번 보내지 않는다.
-        trackBoth("Summary Generated", {
-          link_type: linkType(result.source),
-          validation_status: "success",
-        });
         writeDraft({
           result,
           showToast: true,
@@ -117,36 +113,31 @@ export function LoadingScreen() {
   }, [router]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center bg-linear-to-b from-lavender-field/50 to-white px-5 pb-32 text-center">
-      <Sparkle className="size-[51px]" />
-      <p role="status" className="mt-4 text-base font-semibold tracking-[-0.4px] text-ultra-violet">
-        {MESSAGES.loading}
-      </p>
-      <h1 className="mt-1.5 text-2xl font-extrabold tracking-[-0.02em] text-ultra-violet">
-        핵심만 추리고 있어요
-      </h1>
-      <svg aria-hidden viewBox="0 0 38 38" className="mt-10 size-[38px] animate-spin">
-        <circle cx="19" cy="19" r="16" fill="none" stroke="#e8ecf1" strokeWidth="4" />
-        <circle
-          cx="19"
-          cy="19"
-          r="16"
-          fill="none"
-          stroke="#b8c0cc"
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeDasharray="30 100"
-        />
-      </svg>
+    <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center bg-linear-to-b from-lavender-field/50 to-white px-5 pb-32 text-center">
+      {/* 제목과 진행 바의 가로 길이를 같게 맞춘다. 진행 바는 예상 시간(약 8초)에 맞춰 차오르고, 끝나기 전에는 가득 차지 않는다. */}
+      <div className="w-fit">
+        <p role="status" className="text-base font-semibold tracking-[-0.4px] text-ultra-violet">
+          {MESSAGES.loading}
+        </p>
+        <h1 className="mt-1.5 text-2xl font-extrabold tracking-[-0.02em] text-ultra-violet">
+          핵심만 추리고 있어요
+        </h1>
+        <div aria-hidden className="mt-8 h-1.5 w-full overflow-hidden rounded-full bg-[#e6ebf2]">
+          <div className="h-full animate-loading-bar rounded-full bg-[#1CC98A]" />
+        </div>
+        <p className="mt-5 text-[15px] text-placeholder">{MESSAGES.loadingEta}</p>
+      </div>
 
       {failure ? (
         <AlertDialog
           message={
             failure === "insufficient" ? MESSAGES.insufficientContent : MESSAGES.fetchError
           }
+          secondary={{ label: MESSAGES.homeScope, onClick: () => setScopeOpen(true) }}
           onConfirm={() => router.replace("/")}
         />
       ) : null}
+      {scopeOpen ? <ScopeSheet onClose={() => setScopeOpen(false)} /> : null}
     </div>
   );
 }

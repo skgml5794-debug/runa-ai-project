@@ -26,7 +26,7 @@ export function NoteCard({
       onClick={onOpen}
       className="flex items-center gap-3 rounded-2xl bg-fog p-3 transition-colors hover:bg-fog-hover"
     >
-      <div className="flex size-[61px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white">
+      <div className="flex size-[61px] shrink-0 items-center justify-center overflow-hidden rounded-[17px] bg-white">
         {showImage ? (
           // 원본 썸네일은 임의의 외부 도메인이라 next/image 최적화 대상이 아니다.
           // eslint-disable-next-line @next/next/no-img-element
@@ -39,7 +39,7 @@ export function NoteCard({
             onError={() => setFailedSrc(src)}
           />
         ) : (
-          <SourceIcon className="size-7 text-[#d5dbe3]" aria-hidden />
+          <SourceIcon className="size-7 text-[#d5dde8]" aria-hidden />
         )}
       </div>
       <div className="min-w-0 flex-1">

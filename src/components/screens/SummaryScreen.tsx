@@ -73,12 +73,14 @@ export function SummaryScreen() {
         summaryLines: result.summaryLines,
         keyInfo: result.keyInfo,
         categoryIds: [],
+        suggestedCategory: result.suggestedCategory,
       }}
       onSave={async (values, pending) => {
         const created = await addCategories(pending.map((item) => item.name));
         const categoryIds = remapCategoryIds(values.categoryIds, pending, created);
         await addNote({
           ...result,
+          suggestedCategory: undefined,
           title: values.title,
           summaryLines: values.summaryLines,
           keyInfo: values.keyInfo,

@@ -17,8 +17,8 @@ export function Sparkle({
     <svg viewBox="0 0 64 64" aria-hidden className={`overflow-visible ${className}`}>
       <defs>
         <linearGradient id={id} x1="10" y1="10" x2="54" y2="58" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#9fb0c6" />
-          <stop offset="1" stopColor="#4b5a70" />
+          <stop stopColor="#a3b1c2" />
+          <stop offset="1" stopColor="#475569" />
         </linearGradient>
       </defs>
       <g className={float ? "animate-float-a motion-reduce:animate-none" : undefined}>
@@ -52,8 +52,8 @@ export function SparkleStar({ className = "" }: { className?: string }) {
     <svg viewBox="8 8 40 40" aria-hidden className={className}>
       <defs>
         <linearGradient id={id} x1="10" y1="10" x2="54" y2="58" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#9fb0c6" />
-          <stop offset="1" stopColor="#4b5a70" />
+          <stop stopColor="#a3b1c2" />
+          <stop offset="1" stopColor="#475569" />
         </linearGradient>
       </defs>
       <path
@@ -74,8 +74,8 @@ export function MessageGlyph({ className = "" }: { className?: string }) {
     <svg viewBox="0 0 120 120" aria-hidden className={className}>
       <defs>
         <linearGradient id={id} x1="20" y1="10" x2="100" y2="110" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#b8c4d4" stopOpacity="0.55" />
-          <stop offset="1" stopColor="#4b5a70" />
+          <stop stopColor="#c3cedb" stopOpacity="0.55" />
+          <stop offset="1" stopColor="#475569" />
         </linearGradient>
       </defs>
       <path
