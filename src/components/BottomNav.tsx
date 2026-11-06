@@ -18,7 +18,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="하단 메뉴"
-      className={`sticky bottom-0 z-20 shrink-0 border-t border-[#e6ebf2] bg-white pb-[env(safe-area-inset-bottom)]`}
+      className={`sticky bottom-0 z-20 shrink-0 [html[data-keyboard=open]_&]:hidden border-t border-[#e6ebf2] bg-white pb-[env(safe-area-inset-bottom)]`}
     >
       <ul className="grid grid-cols-3">
         {ITEMS.map(({ href, label, Icon }) => {

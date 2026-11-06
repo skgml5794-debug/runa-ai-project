@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { categoryProp, contentType, trackBoth } from "@/lib/analytics";
 import { remapCategoryIds } from "@/lib/categories";
 import { MESSAGES } from "@/lib/constants";
+import { queueFeedbackPrompt } from "@/lib/feedback";
 import { formatDate } from "@/lib/notes";
 import { compareSummary } from "@/lib/summary-diff";
 import {
@@ -111,6 +112,8 @@ export function SummaryScreen() {
           category_id: categoryProp(categoryIds),
           content_type: contentType(result.url, result.source),
         });
+        // 저장이 성공한 직후, 아직 기록이 없을 때만 피드백 팝업을 한 번 띄운다.
+        queueFeedbackPrompt();
         leaving.current = true;
         clearDraftSession();
         router.replace("/notes");

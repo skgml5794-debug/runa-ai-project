@@ -25,6 +25,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   // 모바일 브라우저의 상태 표시줄·외곽 영역 색
   themeColor: "#ffffff",
+  // Android Chrome: 키보드가 열리면 화면(레이아웃)이 줄어들어 입력창·버튼이 가려지지 않는다.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

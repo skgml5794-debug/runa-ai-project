@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
 /* DESIGN.md의 Keepnote 적용 가이드 토큰 */
+/* 화면 크기 구간. 600px 미만(휴대폰)은 화면 전체, 600px 이상은 가운데 앱 프레임, 1024px 이상(데스크톱)은 고정 크기 프레임 */
+@custom-variant framed (@media (min-width: 600px));
+@custom-variant wide (@media (min-width: 1024px));
+/* 가로로 눕힌 휴대폰·태블릿처럼 세로가 짧은 터치 화면 */
+@custom-variant short (@media (max-height: 520px) and (pointer: coarse));
+
 @theme {
   /* 메인 컬러 */
   --color-brand: #151924;
@@ -125,6 +131,8 @@
 @layer base {
   html {
     font-family: var(--font-sans);
+    /* 포커스한 입력창이 하단 고정 버튼 밑에 가려지지 않게 한다. */
+    scroll-padding-bottom: 6rem;
     -webkit-tap-highlight-color: transparent;
     text-size-adjust: 100%;
   }

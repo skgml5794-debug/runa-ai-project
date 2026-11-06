@@ -25,7 +25,7 @@ export function ScopeSheet({ onClose }: { onClose(): void }) {
   const scope = SUMMARY_SCOPE[tab];
   return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex min-[431px]:absolute items-end bg-midnight-ink/40"
+      className="fixed inset-0 z-[60] flex framed:absolute items-end bg-midnight-ink/40 pb-[var(--keyboard-inset,0px)]"
       // 어두운 바깥 영역을 누르면 닫는다.
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
