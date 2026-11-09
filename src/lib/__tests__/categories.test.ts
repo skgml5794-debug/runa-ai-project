@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canSuggestCategory,
   isDuplicateCategoryName,
   normalizeCategoryName,
   remapCategoryIds,
@@ -44,5 +45,17 @@ describe("remapCategoryIds", () => {
       [{ id: "real-1" }, { id: "real-2" }],
     );
     expect(result).toEqual(["a", "real-1", "real-2"]);
+  });
+});
+
+describe("canSuggestCategory", () => {
+  it("킵박스가 8개까지는 이름을 추천한다", () => {
+    expect(canSuggestCategory(0)).toBe(true);
+    expect(canSuggestCategory(8)).toBe(true);
+  });
+
+  it("킵박스가 8개를 넘으면 추천하지 않는다", () => {
+    expect(canSuggestCategory(9)).toBe(false);
+    expect(canSuggestCategory(20)).toBe(false);
   });
 });

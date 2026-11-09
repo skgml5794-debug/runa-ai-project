@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useThumbnailSrc } from "@/lib/thumbnail";
 import type { Note } from "@/lib/types";
 import { InstagramIcon, ThreadsIcon } from "../ui/icons";
 
@@ -16,7 +17,7 @@ export function NoteCard({
 }) {
   // 썸네일 주소가 만료되었거나 불러오지 못하면 출처 아이콘으로 대신한다.
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const src = note.thumbnailUrl;
+  const src = useThumbnailSrc(note.id, note.thumbnailUrl);
   const showImage = src !== null && src !== failedSrc;
   const SourceIcon = note.source === "Threads" ? ThreadsIcon : InstagramIcon;
 

@@ -4,7 +4,7 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { uid } from "@/lib/async";
 import { categoryColor } from "@/lib/category-colors";
-import { normalizeCategoryName, validateCategoryName } from "@/lib/categories";
+import { canSuggestCategory, normalizeCategoryName, validateCategoryName } from "@/lib/categories";
 import {
   CATEGORY_NAME_MAX,
   MAX_CATEGORIES,
@@ -192,6 +192,8 @@ export function SummaryEditor({
     : undefined;
   const showSuggestion =
     suggestion !== "" &&
+    // 킵박스가 이미 8개를 넘으면 새 킵박스 이름은 추천하지 않는다.
+    canSuggestCategory(allCategories.length) &&
     !(suggestedMatch && validSelected.includes(suggestedMatch.id)) &&
     (suggestedMatch ? !atNoteMax : !atTotalMax && !atNoteMax);
 

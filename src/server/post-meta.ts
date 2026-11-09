@@ -1,5 +1,6 @@
 import "server-only";
 import { extractAuthorId, parseLink } from "../lib/link";
+import { isProfilePhoto } from "../lib/thumbnail-url";
 import type { Source } from "../lib/types";
 import { FetchFailedError, InsufficientContentError } from "./errors";
 import { extractThreadsData, threadsShortcode } from "./threads-data";
@@ -117,7 +118,8 @@ export function buildPostMeta(
   }
 
   const image = meta["og:image"];
-  const thumbnailUrl = image?.startsWith("https://") ? image : null;
+  // 게시물에 이미지·영상이 없으면 og:image가 작성자 프로필 사진이므로 썸네일로 쓰지 않는다.
+  const thumbnailUrl = image?.startsWith("https://") && !isProfilePhoto(image) ? image : null;
   return {
     url: target.url,
     source: target.source,

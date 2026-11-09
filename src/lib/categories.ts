@@ -1,4 +1,4 @@
-import { CATEGORY_NAME_MAX } from "./constants";
+import { CATEGORY_NAME_MAX, MAX_CATEGORIES_FOR_SUGGESTION } from "./constants";
 
 /** 카테고리를 최대 개수보다 더 만들려 할 때 던진다. UI와 별개로 저장소에서도 막는다. */
 export class CategoryLimitError extends Error {
@@ -50,4 +50,9 @@ export function remapCategoryIds(
 ): string[] {
   const map = new Map(pending.map((item, index) => [item.id, created[index].id]));
   return ids.map((id) => map.get(id) ?? id);
+}
+
+/** 킵박스가 이미 많으면(8개 초과) 새 킵박스 이름을 추천하지 않는다. */
+export function canSuggestCategory(categoryCount: number): boolean {
+  return categoryCount <= MAX_CATEGORIES_FOR_SUGGESTION;
 }

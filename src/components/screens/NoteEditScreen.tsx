@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { trackBoth } from "@/lib/analytics";
 import { remapCategoryIds } from "@/lib/categories";
 import { formatDate } from "@/lib/notes";
+import { useThumbnailSrc } from "@/lib/thumbnail";
 import { useKeepnote } from "../KeepnoteProvider";
 import { SummaryEditor } from "../note/SummaryEditor";
 
@@ -16,6 +17,7 @@ export function NoteEditScreen() {
   const leaving = useRef(false);
 
   const note = notes.find((item) => item.id === id) ?? null;
+  const thumbnailSrc = useThumbnailSrc(id, note?.thumbnailUrl ?? null);
 
   useEffect(() => {
     if (ready && !note && !leaving.current) router.replace("/notes");
@@ -32,7 +34,7 @@ export function NoteEditScreen() {
     <SummaryEditor
       initial={{
         url: note.url,
-        thumbnailUrl: note.thumbnailUrl,
+        thumbnailUrl: thumbnailSrc,
         source: note.source,
         authorId: note.authorId,
         // 수정해도 최초 저장 날짜를 유지한다.

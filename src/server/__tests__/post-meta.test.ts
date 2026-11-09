@@ -26,6 +26,29 @@ describe("validateTarget", () => {
   });
 });
 
+describe("buildPostMeta 썸네일", () => {
+  const PROFILE = "https://scontent.cdninstagram.com/v/t51.82787-19/123_n.jpg?stp=dst-jpg_s150x150&amp;oe=ABC";
+  const POST_IMAGE = "https://scontent.cdninstagram.com/v/t51.82787-15/456_n.jpg?oe=ABC";
+  const withImage = (image: string) =>
+    `<html><head>
+      <meta property="og:title" content="Kim on Threads: &quot;글&quot;">
+      <meta content="${LONG}" property="og:description">
+      <meta property="og:image" content="${image}">
+    </head></html>`;
+  const THREADS = { url: "https://www.threads.com/@kim/post/AbC123", source: "Threads" as const };
+
+  it("작성자 프로필 사진(경로 끝이 -19)은 썸네일로 쓰지 않는다", () => {
+    expect(buildPostMeta(THREADS, withImage(PROFILE)).thumbnailUrl).toBeNull();
+    expect(buildPostMeta(TARGET, withImage(PROFILE)).thumbnailUrl).toBeNull();
+  });
+
+  it("게시물 이미지(경로 끝이 -15)는 그대로 쓴다", () => {
+    expect(buildPostMeta(THREADS, withImage(POST_IMAGE)).thumbnailUrl).toBe(
+      "https://scontent.cdninstagram.com/v/t51.82787-15/456_n.jpg?oe=ABC",
+    );
+  });
+});
+
 describe("extractMeta", () => {
   it("속성 순서와 상관없이 읽고 HTML 엔티티를 풀어준다", () => {
     const meta = extractMeta(html("설명 &amp; 내용"));

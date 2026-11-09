@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { repository } from "@/lib/repository";
+import { repairThumbnails } from "@/lib/thumbnail";
 import type { Category, Note, NoteInput, NotePatch } from "@/lib/types";
 
 interface KeepnoteContextValue {
@@ -59,6 +60,11 @@ export function KeepnoteProvider({ children }: { children: ReactNode }) {
       active = false;
     };
   }, []);
+
+  // 만료된 썸네일 주소를 보관본으로 바꿔 둔다. 킵노트 데이터는 바꾸지 않고, 실패해도 화면에는 영향이 없다.
+  useEffect(() => {
+    if (ready) void repairThumbnails(notes);
+  }, [ready, notes]);
 
   const value = useMemo<KeepnoteContextValue>(
     () => ({

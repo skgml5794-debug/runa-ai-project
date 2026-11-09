@@ -3,7 +3,7 @@ import type { Source } from "./types";
 /**
  * 모바일에서 브라우저보다 앱을 먼저 연다. 앱이 없으면 fallback 주소(스토어나 웹)로 이동한다.
  * - Android: intent 주소. 앱이 없으면 Chrome이 Play 스토어로 보낸다.
- * - iOS: 앱 주소(scheme)를 열어 보고, 잠시 뒤에도 화면이 그대로면 fallback으로 이동한다.
+ * - iOS: 앱 주소(scheme)로 바로 이동하고, 잠시 뒤에도 화면이 그대로면 fallback으로 이동한다.
  * 데스크톱이면 false를 돌려주므로 호출한 쪽이 기본 동작(새 탭)을 그대로 두면 된다.
  */
 export interface AppTarget {
@@ -41,20 +41,17 @@ export function launchApp(target: AppTarget): boolean {
   document.addEventListener("visibilitychange", markLeft, { once: true });
   window.addEventListener("pagehide", markLeft, { once: true });
   window.addEventListener("blur", markLeft, { once: true });
-  // 앱 주소는 숨은 프레임으로 열어, 앱이 없을 때 Safari의 '주소가 유효하지 않음' 안내가 뜨지 않게 한다.
-  const frame = document.createElement("iframe");
-  frame.style.display = "none";
-  frame.src = target.iosApp;
-  document.body.appendChild(frame);
-  window.setTimeout(() => frame.remove(), 2000);
+  // 앱 주소로 바로 이동한다. (숨은 프레임으로 여는 방식은 최근 iOS에서 막혀 앱이 열리지 않고 기다렸다가 웹으로 넘어갔다.)
+  window.location.href = target.iosApp;
   window.setTimeout(() => {
     document.removeEventListener("visibilitychange", markLeft);
     window.removeEventListener("pagehide", markLeft);
     window.removeEventListener("blur", markLeft);
-    if (!left && document.visibilityState === "visible") {
+    // iOS 확인창이 떠 있는 동안에는(화면이 포커스를 잃음) 웹 주소로 넘어가지 않는다.
+    if (!left && document.visibilityState === "visible" && document.hasFocus()) {
       window.location.href = target.iosFallback;
     }
-  }, 2500);
+  }, 2000);
   return true;
 }
 

@@ -40,3 +40,6 @@ export function Button({
     />
   );
 }
+
+/** 팝업(다이얼로그·시트)의 버튼 글자: 15px, 굵기 500. 팝업마다 같은 크기로 보이도록 모든 팝업 버튼에 쓴다. */
+export const POPUP_BUTTON_TEXT = "!text-[15px] !font-medium";

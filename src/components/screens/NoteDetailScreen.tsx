@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useState } from "react";
 import { categoryProp, contentType, trackBoth } from "@/lib/analytics";
 import { MESSAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/notes";
+import { useThumbnailSrc } from "@/lib/thumbnail";
 import { SESSION_KEYS, getSession } from "@/lib/session";
 import { categoryColor } from "@/lib/category-colors";
 import { useKeepnote } from "../KeepnoteProvider";
@@ -34,6 +35,7 @@ export function NoteDetailScreen() {
   const [deleting, setDeleting] = useState(false);
 
   const note = notes.find((item) => item.id === id) ?? null;
+  const thumbnailSrc = useThumbnailSrc(id, note?.thumbnailUrl ?? null);
 
   useEffect(() => {
     if (ready && !note && !deleting) router.replace(notesListHref());
@@ -79,7 +81,7 @@ export function NoteDetailScreen() {
           type="button"
           aria-label="뒤로가기"
           onClick={() => router.push(notesListHref())}
-          className="relative flex size-11 items-center justify-center rounded-full text-midnight-ink"
+          className="relative flex size-11 items-center justify-center rounded-full text-placeholder"
         >
           <ChevronLeft className="size-6" aria-hidden />
         </button>
@@ -89,7 +91,7 @@ export function NoteDetailScreen() {
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((open) => !open)}
-          className="relative flex size-11 items-center justify-center rounded-full text-midnight-ink"
+          className="relative flex size-11 items-center justify-center rounded-full text-placeholder"
         >
           <Ellipsis className="size-6" aria-hidden />
         </button>
@@ -137,7 +139,7 @@ export function NoteDetailScreen() {
         <div className="space-y-4 pb-1">
           <Thumbnail
             source={note.source}
-            src={note.thumbnailUrl}
+            src={thumbnailSrc}
             href={note.url}
             showArrow={note.source === "Threads"}
           />

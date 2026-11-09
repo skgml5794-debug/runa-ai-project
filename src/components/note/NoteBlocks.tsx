@@ -44,7 +44,8 @@ export function Thumbnail({
         />
       ) : (
         <SourceIcon
-          className="size-16 text-[#d5dde8]"
+          // 목록의 썸네일(61px 칸에 28px)과 같은 비율로 맞춘다.
+          className={`${compact ? "size-[38px]" : "size-16"} text-[#d5dde8]`}
           aria-label={`${source} 아이콘`}
         />
       )}

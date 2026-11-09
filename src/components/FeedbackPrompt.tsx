@@ -15,7 +15,7 @@ import {
   useFeedbackPromptOpen,
 } from "@/lib/feedback";
 import { useFrameElement } from "./AppFrame";
-import { Button } from "./ui/Button";
+import { Button, POPUP_BUTTON_TEXT } from "./ui/Button";
 import { FIELD_LINE } from "./ui/field";
 import { round } from "./ui/HomeArt";
 
@@ -119,7 +119,7 @@ function FeedbackSheet() {
         role="dialog"
         aria-modal="true"
         aria-label="피드백"
-        className="flex max-h-[calc(92dvh-var(--keyboard-inset,0px))] w-full animate-dialog-in flex-col rounded-t-3xl bg-white outline-none"
+        className="flex max-h-[calc(92dvh-var(--keyboard-inset,0px))] w-full animate-dialog-in flex-col rounded-t-3xl bg-white outline-none [&_button]:outline-none"
       >
         <div className="px-5 pt-5 short:pt-2">
           <div className="-mx-2.5 -mt-1 flex items-center justify-between">
@@ -183,7 +183,7 @@ function FeedbackSheet() {
             <p className="mt-2 text-[15px] leading-6 text-placeholder">
               보내주신 의견은 킵노트를 더 좋게 만드는 데 사용할게요.
             </p>
-            <Button className="mt-10 w-full self-stretch" onClick={close}>
+            <Button className={`mt-10 w-full self-stretch ${POPUP_BUTTON_TEXT}`} onClick={close}>
               확인
             </Button>
           </div>
@@ -300,16 +300,16 @@ function FeedbackSheet() {
                 <button
                   type="button"
                   onClick={close}
-                  className="min-h-14 w-full text-base text-slate"
+                  className="min-h-14 w-full text-[15px] font-medium text-slate"
                 >
                   나중에
                 </button>
               ) : step === 1 ? (
-                <Button className="w-full" onClick={() => setStep(2)}>
+                <Button className={`w-full ${POPUP_BUTTON_TEXT}`} onClick={() => setStep(2)}>
                   다음
                 </Button>
               ) : (
-                <Button className="w-full" disabled={busy} onClick={submit}>
+                <Button className={`w-full ${POPUP_BUTTON_TEXT}`} disabled={busy} onClick={submit}>
                   {busy ? "보내는 중..." : status === "error" ? "다시 시도" : "의견 보내기"}
                 </Button>
               )}

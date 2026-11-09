@@ -1,4 +1,6 @@
 export const MAX_CATEGORIES = 20;
+/** 킵박스가 이 개수를 넘으면 요약 완료 화면에서 킵박스 이름을 추천하지 않는다. */
+export const MAX_CATEGORIES_FOR_SUGGESTION = 8;
 export const MAX_NOTE_CATEGORIES = 10;
 export const CATEGORY_NAME_MAX = 20;
 export const TITLE_MAX = 100;
@@ -16,7 +18,7 @@ export const MESSAGES = {
   clipboardLink: "방금 복사한 링크 킵할까요?",
   emptyInput: "내용을 입력해주세요",
   fetchError:
-    "정보를 가져오는 중 문제가 발생했어요. 링크를 확인한 후 다시 시도해주세요.",
+    "정보를 가져오는 중 문제가 발생했어요.\n링크를 확인한 후 다시 시도해주세요.",
   insufficientContent:
     "요약할 만한 내용이 부족해요.\n게시물에 글이 거의 없거나 일부만\n공개되어 있을 수 있어요.",
   leaveUnsaved: "저장하지 않고 나갈까요?",
@@ -52,20 +54,20 @@ export const SUMMARY_SCOPE = [
         ok: true,
         title: "본문에 정보가 작성된 경우",
         image: "/scope/instagram-1.png",
-        text: "링크를 복사하기 전,\n본문에 내용이 포함되어있는지 확인해주세요.",
+        text: "링크를 복사하기 전, 본문에 내용이 포함되어 있는지 확인해주세요.",
       },
       {
         ok: false,
-        title: "영상에 정보가 포함된 경우",
+        title: "영상에만 정보가 포함된 경우",
         image: "/scope/instagram-2.png",
-        text: "음성이나 자막은 일부 확인될 수 있지만\n일부 내용만 가져올 수 있어요.",
-        tip: "Tip. 요약이 끝난 뒤 부족한 내용은 직접 추가하거나\n수정할 수 있어요.",
+        text: "음성이나 자막은 추출할 수 없어요.",
+        tip: "Tip. 요약이 끝난 뒤 부족한 내용은 직접 추가하거나 수정할 수 있어요.",
       },
       {
         ok: false,
-        title: "피드 이미지에 정보가 작성된 경우",
+        title: "이미지에 정보가 작성된 경우",
         image: "/scope/instagram-3.png",
-        text: "이미지에만 정보가 있을 경우는 불가능하지만,\n본문에도 내용이 작성되어있다면 불러올 수 있어요.",
+        text: "이미지에만 정보가 있을 경우는 불가능하지만, 본문에도 내용이 작성되어있다면 불러올 수 있어요.",
       },
     ],
   },
@@ -76,7 +78,7 @@ export const SUMMARY_SCOPE = [
         ok: true,
         title: "본문에 내용이 작성된 경우",
         image: "/scope/threads-1.png",
-        text: "링크를 복사하기 전,\n본문에 내용이 포함되어있는지 확인해주세요.",
+        text: "링크를 복사하기 전, 본문에 내용이 포함되어 있는지 확인해주세요.",
       },
       {
         ok: false,
@@ -88,14 +90,14 @@ export const SUMMARY_SCOPE = [
         ok: true,
         title: "고정 댓글에 정보가 포함된 경우",
         image: "/scope/threads-3.png",
-        text: "스레드는 고정 댓글에 정보를 제공하는\n경우가 많아요. 최대 3개까지 불러올 수 있어요.",
+        text: "스레드는 고정 댓글에 정보를 제공하는 경우가 많아요. 최대 3개까지 불러올 수 있어요.",
       },
       {
         ok: true,
         title: "일반 댓글에 정보가 포함된 경우",
         image: "/scope/threads-4.png",
-        text: "필요한 정보가 일반 댓글에 있다면\n해당 댓글의 링크를 복사하세요.",
-        tip: "Tip. 해당 댓글 오른쪽의 더보기(⋯)를 누르면 돼요.",
+        text: "필요한 정보가 댓글에 있다면 해당 댓글의 링크를 복사하면 돼요.",
+        tip: "Tip. 댓글 오른쪽의 더보기(⋯)를 클릭",
       },
     ],
   },

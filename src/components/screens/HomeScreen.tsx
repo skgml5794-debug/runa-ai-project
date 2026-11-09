@@ -145,7 +145,7 @@ export function HomeScreen() {
         className="relative z-10 ml-6 mr-5 flex min-h-9 w-fit shrink-0 items-center gap-1 text-base text-graphite"
       >
         {MESSAGES.homeScope}
-        <ChevronRight className="size-4 text-placeholder" aria-hidden />
+        <ChevronRight className="size-4 text-[#cbd5e1]" aria-hidden />
       </button>
       <ul className="no-scrollbar relative z-10 flex shrink-0 snap-x scroll-px-5 gap-3 overflow-x-auto px-5 pb-3 pt-2">
         {GUIDES.map(({ title, description, Art }) => (
@@ -225,10 +225,25 @@ export function HomeScreen() {
         </div>
       </form>
 
-      {scopeOpen ? <ScopeSheet onClose={() => setScopeOpen(false)} /> : null}
+      {scopeOpen ? (
+        <ScopeSheet
+          onClose={() => setScopeOpen(false)}
+          // 오류 팝업에서 열었다면 확인과 함께 오류 팝업도 닫는다.
+          onConfirm={() => {
+            setScopeOpen(false);
+            setAlertMessage(null);
+          }}
+        />
+      ) : null}
       {alertMessage ? (
         <AlertDialog
           message={alertMessage}
+          // 링크를 불러오지 못한 오류에는 어떤 게시물을 요약할 수 있는지 안내하는 버튼을 함께 보여준다.
+          secondary={
+            alertMessage === MESSAGES.fetchError
+              ? { label: MESSAGES.homeScope, onClick: () => setScopeOpen(true) }
+              : undefined
+          }
           onConfirm={() => setAlertMessage(null)}
         />
       ) : null}

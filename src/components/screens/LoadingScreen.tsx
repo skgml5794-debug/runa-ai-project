@@ -137,7 +137,10 @@ export function LoadingScreen() {
           onConfirm={() => router.replace("/")}
         />
       ) : null}
-      {scopeOpen ? <ScopeSheet onClose={() => setScopeOpen(false)} /> : null}
+      {scopeOpen ? (
+        // 요약범위를 확인한 뒤 확인을 누르면 오류 팝업까지 닫고 홈으로 돌아간다.
+        <ScopeSheet onClose={() => setScopeOpen(false)} onConfirm={() => router.replace("/")} />
+      ) : null}
     </div>
   );
 }

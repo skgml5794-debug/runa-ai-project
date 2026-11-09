@@ -14,7 +14,7 @@ const STEPS: {
 }[] = [
   {
     title: "인스타그램·스레드 링크 가져오기",
-    description: "본문에 정보가 포함된 글만 가져올 수 있어요.",
+    description: "본문에 정보가 포함된 글을 가져올 수 있어요.",
   },
   {
     title: "AI 요약 확인하기",
@@ -22,14 +22,14 @@ const STEPS: {
   },
   {
     title: "검색어로 찾기",
-    description: "정보가 필요한 순간, 검색어로\n손쉽게 찾아볼 수 있어요.",
+    description: "정보가 필요한 순간,\n검색어로 손쉽게 찾아볼 수 있어요.",
   },
 ];
 
 /** 시작 화면 내용. 화면과, 홈으로 넘어갈 때 사라지는 잔상이 같은 모양을 쓴다. */
 export function OnboardingContent({ onStart }: { onStart?: () => void }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-white px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+    <div className="flex min-h-0 flex-1 flex-col bg-white px-7 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
       <div className="flex min-h-0 flex-1 flex-col justify-center">
         <h1 className="text-[24px] font-bold leading-[1.45] tracking-[-0.3px] text-midnight-ink">
           SNS에서 발견한
