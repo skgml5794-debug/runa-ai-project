@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { completeOnboarding, startOnboardingExit } from "@/lib/onboarding";
+import { completeOnboarding, startOnboardingExit, trackOnboardingStarted } from "@/lib/onboarding";
 import { Button } from "../ui/Button";
 
 /** 강조색. 제목 강조와 번호 박스가 같은 색을 쓴다. */
@@ -67,16 +67,17 @@ export function OnboardingContent({ onStart }: { onStart?: () => void }) {
   );
 }
 
-/** 처음 방문한 사람에게만 한 번 보여주는 시작 안내. 열리는 순간 본 것으로 기록한다. */
+/** 시작하기를 누른 사람에게는 다시 보여주지 않는 시작 안내. 누르지 않고 떠나면 다음 방문에 다시 보인다. */
 export function OnboardingScreen() {
   const router = useRouter();
   useEffect(() => {
-    completeOnboarding();
+    trackOnboardingStarted();
   }, []);
 
   return (
     <OnboardingContent
       onStart={() => {
+        completeOnboarding();
         // 이 화면은 바로 사라지고, 같은 모양의 잔상이 서서히 사라지면서 홈이 서서히 나타난다.
         startOnboardingExit();
         router.replace("/");

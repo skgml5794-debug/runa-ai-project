@@ -6,7 +6,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { linkType, secondsSince, trackBoth } from "@/lib/analytics";
 import { MESSAGES } from "@/lib/constants";
 import { launchApp } from "@/lib/open-app";
-import { consumeArrivalFromOnboarding } from "@/lib/onboarding";
+import {
+  consumeArrivalFromOnboarding,
+  createHomeViewedReporter,
+  trackOnboardingCompleted,
+  useOnboarded,
+} from "@/lib/onboarding";
 import { SERVICES } from "@/lib/services";
 import { parseLink } from "@/lib/link";
 import { SESSION_KEYS, setSession, useSessionValue } from "@/lib/session";
@@ -33,7 +38,9 @@ export function HomeScreen() {
   const rootRef = useRef<HTMLDivElement>(null);
   // 시작하기에서 넘어온 직후에만 홈이 서서히 나타난다.
   useLayoutEffect(() => {
-    if (consumeArrivalFromOnboarding()) rootRef.current?.classList.add("animate-fade-in");
+    if (!consumeArrivalFromOnboarding()) return;
+    rootRef.current?.classList.add("animate-fade-in");
+    trackOnboardingCompleted();
   }, []);
   const submitting = useRef(false);
   // 화면을 열 때 이미 들어 있던(오류 뒤 복원된) 링크였는지
@@ -64,13 +71,12 @@ export function HomeScreen() {
     };
   }, []);
 
-  // 홈이 보일 때 마운트당 한 번만 기록한다. 퍼널의 시작 단계.
-  const viewedSent = useRef(false);
+  // 온보딩을 마친 사용자의 홈이 보일 때 마운트당 한 번만 기록한다. 시작 화면으로 넘어가는 신규 사용자는 제외한다.
+  const onboarded = useOnboarded();
+  const [reportHomeViewed] = useState(createHomeViewedReporter);
   useEffect(() => {
-    if (viewedSent.current) return;
-    viewedSent.current = true;
-    trackBoth("Home Viewed");
-  }, []);
+    reportHomeViewed(onboarded);
+  }, [onboarded, reportHomeViewed]);
 
   const canSubmit = link.trim() !== "";
 
